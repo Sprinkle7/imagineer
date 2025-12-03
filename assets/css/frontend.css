@@ -1,0 +1,261 @@
+/* Imagineer Frontend Styles */
+
+.imagineer-converter-widget,
+.imagineer-bulk-widget,
+.imagineer-resize-widget {
+    max-width: 600px;
+    margin: 30px auto;
+    background: white;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.ic-widget-header {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 25px;
+    text-align: center;
+}
+
+.ic-widget-header h3 {
+    margin: 0 0 8px 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.ic-widget-header p {
+    margin: 0;
+    opacity: 0.9;
+    font-size: 14px;
+}
+
+.ic-widget-body {
+    padding: 30px;
+}
+
+.ic-upload-zone {
+    border: 3px dashed #ddd;
+    border-radius: 8px;
+    padding: 40px 20px;
+    text-align: center;
+    background: #fafafa;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-bottom: 20px;
+}
+
+.ic-upload-zone:hover {
+    border-color: #667eea;
+    background: #f5f5ff;
+}
+
+.ic-upload-zone svg {
+    color: #667eea;
+    margin-bottom: 15px;
+}
+
+.ic-upload-zone p {
+    margin: 0;
+    color: #666;
+    font-size: 15px;
+}
+
+.ic-upload-zone.has-file {
+    border-color: #46b450;
+    background: #f0fff4;
+}
+
+.ic-file-input,
+.ic-bulk-file-input {
+    display: none;
+}
+
+.ic-convert-button,
+.ic-bulk-convert-button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.ic-convert-button:hover,
+.ic-bulk-convert-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.ic-convert-button:disabled,
+.ic-bulk-convert-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.ic-widget-result {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f0fff4;
+    border: 2px solid #46b450;
+    border-radius: 8px;
+    text-align: center;
+    display: none;
+}
+
+.ic-widget-result.show {
+    display: block;
+}
+
+.ic-widget-result h4 {
+    margin: 0 0 15px 0;
+    color: #46b450;
+}
+
+.ic-download-link {
+    display: inline-block;
+    padding: 12px 30px;
+    background: #46b450;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+    transition: background 0.3s ease;
+}
+
+.ic-download-link:hover {
+    background: #399638;
+    color: white;
+}
+
+/* Bulk Converter Specific */
+.ic-bulk-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.ic-bulk-controls select,
+.ic-bulk-controls input {
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.ic-bulk-controls .ic-resize-inputs {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.ic-bulk-controls .ic-resize-inputs input {
+    flex: 1;
+}
+
+.ic-bulk-controls .ic-resize-inputs span {
+    color: #666;
+    font-weight: bold;
+}
+
+.ic-bulk-convert-button {
+    grid-column: 1 / -1;
+}
+
+.ic-bulk-progress {
+    margin: 20px 0;
+    display: none;
+}
+
+.ic-bulk-progress.show {
+    display: block;
+}
+
+.ic-progress-bar {
+    width: 100%;
+    height: 30px;
+    background: #e0e0e0;
+    border-radius: 15px;
+    overflow: hidden;
+    margin-bottom: 10px;
+}
+
+.ic-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    transition: width 0.3s ease;
+    border-radius: 15px;
+}
+
+.ic-progress-text {
+    text-align: center;
+    color: #666;
+    font-weight: 500;
+}
+
+.ic-bulk-results {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.ic-bulk-result-item {
+    padding: 15px;
+    background: #f0fff4;
+    border: 1px solid #46b450;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.ic-bulk-result-item p {
+    margin: 0 0 10px 0;
+    font-size: 13px;
+    word-break: break-all;
+}
+
+.ic-bulk-result-item a {
+    display: inline-block;
+    padding: 8px 15px;
+    background: #46b450;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-size: 13px;
+}
+
+.imagineer-pro-required {
+    padding: 30px;
+    background: #fff3cd;
+    border: 2px solid #ffc107;
+    border-radius: 8px;
+    text-align: center;
+    color: #856404;
+}
+
+.imagineer-pro-required a {
+    display: inline-block;
+    margin-top: 15px;
+    padding: 12px 25px;
+    background: #667eea;
+    color: white;
+    text-decoration: none;
+    border-radius: 6px;
+    font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .ic-bulk-controls {
+        grid-template-columns: 1fr;
+    }
+}
+

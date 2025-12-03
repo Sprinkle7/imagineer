@@ -1,0 +1,13 @@
+{
+    "name": "imagineer/image-converter",
+    "description": "WordPress image format converter with WebP support",
+    "type": "wordpress-plugin",
+    "license": "GPL-2.0-or-later",
+    "require": {
+        "php": ">=7.4",
+        "rosell-dk/webp-convert": "^2.9"
+    },
+    "autoload": {
+        "classmap": ["includes/"]
+    }
+}
