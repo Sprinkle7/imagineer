@@ -1,12 +1,19 @@
 ##Imagineer - Image Converter
 
 Contributors: allauddinyousafxai
+
 Tags: image converter, webp, image optimization, bulk converter, image resize
+
 Requires at least: 5.0
+
 Tested up to: 6.9
+
 Requires PHP: 7.4
+
 Stable tag: 1.0.0
+
 License: GPLv2 or later
+
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
 Convert and optimize images between PNG, JPG, WEBP, TIFF, BMP, and GIF formats. All features completely free!
@@ -15,7 +22,7 @@ Convert and optimize images between PNG, JPG, WEBP, TIFF, BMP, and GIF formats. 
 
 **Imagineer** is a powerful, feature-complete image format converter for WordPress. Convert your images between multiple formats with an intuitive drag-and-drop interface - and all features are completely free!
 
-= ✨ Key Features (All Free!) =
+**✨ Key Features (All Free!)**
 
 * **Multiple Format Support** - PNG, JPG, WEBP, TIFF, BMP, and GIF
 * **Bulk Processing** - Convert unlimited images at once
