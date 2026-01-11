@@ -610,47 +610,38 @@
     
     /**
      * Trigger automatic download
-     * Uses fetch + blob for reliable downloads (works even for same-origin URLs)
+     * Uses server-side download handler for reliable downloads (works online)
      */
     function triggerDownload(url, filename) {
-        // Use fetch to get the file as blob, then create download link
-        fetch(url)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error('Download failed');
-                }
-                return response.blob();
-            })
-            .then(blob => {
-                // Create blob URL
-                const blobUrl = window.URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = blobUrl;
-                link.download = filename;
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                
-                // Clean up
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                    window.URL.revokeObjectURL(blobUrl);
-                }, 100);
-            })
-            .catch(error => {
-                console.error('Download error:', error);
-                // Fallback to direct link method
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                link.target = '_blank';
-                link.style.display = 'none';
-                document.body.appendChild(link);
-                link.click();
-                setTimeout(() => {
-                    document.body.removeChild(link);
-                }, 100);
-            });
+        // Use server-side download handler for better compatibility
+        const downloadNonce = icData.downloadNonce || icData.nonce;
+        const downloadUrl = icData.ajaxUrl + '?action=ic_download_file&file=' + encodeURIComponent(url) + 
+                           '&filename=' + encodeURIComponent(filename) + 
+                           '&nonce=' + encodeURIComponent(downloadNonce);
+        
+        // Create hidden iframe for download (works better than link.click())
+        const iframe = document.createElement('iframe');
+        iframe.style.display = 'none';
+        iframe.src = downloadUrl;
+        document.body.appendChild(iframe);
+        
+        // Clean up after download starts
+        setTimeout(() => {
+            document.body.removeChild(iframe);
+        }, 2000);
+        
+        // Fallback: Try direct link method if iframe doesn't work
+        setTimeout(() => {
+            const link = document.createElement('a');
+            link.href = downloadUrl;
+            link.target = '_blank';
+            link.style.display = 'none';
+            document.body.appendChild(link);
+            link.click();
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
+        }, 100);
     }
     
     /**

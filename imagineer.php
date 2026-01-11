@@ -100,6 +100,11 @@ register_activation_hook(__FILE__, 'ic_activate');
 function ic_activate() {
     global $wpdb;
     
+    // Load library installer class if it exists
+    if (file_exists(IC_PLUGIN_DIR . 'includes/class-imagineer-library-installer.php')) {
+        require_once IC_PLUGIN_DIR . 'includes/class-imagineer-library-installer.php';
+    }
+    
     // Set default options
     add_option('ic_max_file_size', 2 * 1024 * 1024); // 2MB for free version
     add_option('ic_default_quality', 80);
@@ -137,11 +142,22 @@ function ic_activate() {
     set_transient('ic_activation_redirect', true, 30);
     
     // Attempt to install WebP Convert library automatically (non-blocking)
-    // This runs in background - won't block activation if it fails
-    $installer = new Imagineer_Library_Installer();
-    if (!$installer->is_installed()) {
-        // Schedule installation attempt (non-blocking)
-        wp_schedule_single_event(time() + 5, 'ic_install_library');
+    // Try immediately first, then schedule as backup
+    if (class_exists('Imagineer_Library_Installer')) {
+        $installer = new Imagineer_Library_Installer();
+        if (!$installer->is_installed()) {
+            // Try immediate installation (non-blocking - errors won't stop activation)
+            try {
+                $result = $installer->install();
+                if (!$result['success'] && !isset($result['already_installed'])) {
+                    // If immediate install failed, schedule for later
+                    wp_schedule_single_event(time() + 30, 'ic_install_library');
+                }
+            } catch (Exception $e) {
+                // Silent fail - schedule for later
+                wp_schedule_single_event(time() + 30, 'ic_install_library');
+            }
+        }
     }
 }
 

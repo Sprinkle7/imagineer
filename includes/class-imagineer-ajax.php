@@ -25,6 +25,8 @@ class Imagineer_Ajax {
         add_action('wp_ajax_ic_bulk_convert', array($this, 'bulk_convert'));
         add_action('wp_ajax_ic_media_library_convert', array($this, 'media_library_convert'));
         add_action('wp_ajax_ic_download_zip', array($this, 'download_zip'));
+        add_action('wp_ajax_ic_download_file', array($this, 'download_file'));
+        add_action('wp_ajax_nopriv_ic_download_file', array($this, 'download_file')); // For frontend
         add_action('wp_ajax_ic_install_library', array($this, 'install_library'));
         add_action('wp_ajax_ic_check_library_status', array($this, 'check_library_status'));
         add_action('wp_ajax_ic_activate_license', array($this, 'activate_license_ajax'));
@@ -958,5 +960,65 @@ class Imagineer_Ajax {
         $status = $installer->get_status();
         
         wp_send_json_success($status);
+    }
+    
+    /**
+     * Server-side file download handler
+     * Forces download with proper headers (works online)
+     */
+    public function download_file() {
+        // Check nonce for security
+        if (!isset($_GET['nonce']) || !wp_verify_nonce($_GET['nonce'], 'ic_download_file')) {
+            wp_die(__('Security check failed.', 'imagineer'));
+        }
+        
+        // Get file path from URL parameter
+        $file_url = isset($_GET['file']) ? esc_url_raw($_GET['file']) : '';
+        if (empty($file_url)) {
+            wp_die(__('No file specified.', 'imagineer'));
+        }
+        
+        // Get filename
+        $filename = isset($_GET['filename']) ? sanitize_file_name($_GET['filename']) : basename($file_url);
+        
+        // Convert URL to file path
+        $upload_dir = wp_upload_dir();
+        $file_path = str_replace($upload_dir['baseurl'], $upload_dir['basedir'], $file_url);
+        
+        // Also check imagineer temp directory
+        if (!file_exists($file_path)) {
+            $imagineer_path = $upload_dir['basedir'] . '/imagineer/' . basename($file_url);
+            if (file_exists($imagineer_path)) {
+                $file_path = $imagineer_path;
+            }
+        }
+        
+        // Verify file exists and is readable
+        if (!file_exists($file_path) || !is_readable($file_path)) {
+            wp_die(__('File not found or not accessible.', 'imagineer'));
+        }
+        
+        // Security: Ensure file is within uploads directory
+        $real_file_path = realpath($file_path);
+        $real_upload_dir = realpath($upload_dir['basedir']);
+        if (strpos($real_file_path, $real_upload_dir) !== 0) {
+            wp_die(__('Invalid file path.', 'imagineer'));
+        }
+        
+        // Get file mime type
+        $mime_type = wp_check_filetype($file_path);
+        $content_type = !empty($mime_type['type']) ? $mime_type['type'] : 'application/octet-stream';
+        
+        // Set headers to force download
+        header('Content-Type: ' . $content_type);
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . filesize($file_path));
+        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
+        header('Pragma: public');
+        header('Expires: 0');
+        
+        // Output file
+        readfile($file_path);
+        exit;
     }
 }

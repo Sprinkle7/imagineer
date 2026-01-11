@@ -38,6 +38,7 @@ class Imagineer_Shortcodes {
         wp_localize_script('imagineer-frontend', 'imagineerData', array(
             'ajaxUrl' => admin_url('admin-ajax.php'),
             'nonce' => wp_create_nonce('ic_convert_nonce'),
+            'downloadNonce' => wp_create_nonce('ic_download_file'),
             'isPro' => $this->core->is_pro_active(),
             'maxFileSize' => $this->core->get_max_file_size(),
             'strings' => array(
