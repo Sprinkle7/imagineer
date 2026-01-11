@@ -72,6 +72,155 @@
         }
     };
     
+    // Professional Dialog System
+    window.ImagineerDialog = {
+        overlay: null,
+        dialog: null,
+        
+        init() {
+            if (!this.overlay) {
+                this.overlay = $('<div class="ic-dialog-overlay"></div>');
+                this.dialog = $('<div class="ic-dialog"></div>');
+                this.overlay.append(this.dialog);
+                $('body').append(this.overlay);
+                
+                // Close on overlay click
+                this.overlay.on('click', (e) => {
+                    if ($(e.target).hasClass('ic-dialog-overlay')) {
+                        this.close();
+                    }
+                });
+                
+                // Close on ESC key
+                $(document).on('keydown', (e) => {
+                    if (e.key === 'Escape' && this.overlay.hasClass('show')) {
+                        this.close();
+                    }
+                });
+            }
+        },
+        
+        show(options) {
+            this.init();
+            
+            const {
+                title = 'Notice',
+                message = '',
+                type = 'info', // info, success, error, warning
+                buttons = [],
+                showClose = true,
+                onClose = null
+            } = options;
+            
+            const icons = {
+                success: '✓',
+                error: '✕',
+                warning: '⚠',
+                info: 'ℹ'
+            };
+            
+            const iconColors = {
+                success: 'success',
+                error: 'error',
+                warning: 'warning',
+                info: 'info'
+            };
+            
+            let buttonsHtml = '';
+            if (buttons.length > 0) {
+                buttonsHtml = '<div class="ic-dialog-footer">';
+                buttons.forEach(btn => {
+                    const btnClass = btn.class || 'ic-dialog-btn-secondary';
+                    buttonsHtml += `<button class="ic-dialog-btn ${btnClass}" data-action="${btn.action || ''}">${btn.text}</button>`;
+                });
+                buttonsHtml += '</div>';
+            }
+            
+            const dialogHtml = `
+                <div class="ic-dialog-header">
+                    <h3>${title}</h3>
+                    ${showClose ? '<button class="ic-dialog-close" aria-label="Close">×</button>' : ''}
+                </div>
+                <div class="ic-dialog-body">
+                    ${type ? `<div class="ic-dialog-icon ${iconColors[type]}">${icons[type]}</div>` : ''}
+                    <div>${message}</div>
+                </div>
+                ${buttonsHtml}
+            `;
+            
+            this.dialog.html(dialogHtml);
+            
+            // Attach button handlers
+            this.dialog.find('.ic-dialog-btn').on('click', (e) => {
+                const action = $(e.target).data('action');
+                if (action && options.onButtonClick) {
+                    options.onButtonClick(action);
+                }
+                this.close();
+            });
+            
+            // Close button
+            this.dialog.find('.ic-dialog-close').on('click', () => {
+                this.close();
+                if (onClose) onClose();
+            });
+            
+            // Show dialog
+            setTimeout(() => {
+                this.overlay.addClass('show');
+            }, 10);
+            
+            return this;
+        },
+        
+        alert(title, message, type = 'info') {
+            return this.show({
+                title: title,
+                message: message,
+                type: type,
+                buttons: [{
+                    text: 'OK',
+                    class: 'ic-dialog-btn-primary',
+                    action: 'ok'
+                }]
+            });
+        },
+        
+        confirm(title, message, onConfirm, onCancel) {
+            return this.show({
+                title: title,
+                message: message,
+                type: 'warning',
+                buttons: [
+                    {
+                        text: 'Cancel',
+                        class: 'ic-dialog-btn-secondary',
+                        action: 'cancel'
+                    },
+                    {
+                        text: 'Confirm',
+                        class: 'ic-dialog-btn-primary',
+                        action: 'confirm'
+                    }
+                ],
+                onButtonClick: (action) => {
+                    if (action === 'confirm' && onConfirm) {
+                        onConfirm();
+                    } else if (action === 'cancel' && onCancel) {
+                        onCancel();
+                    }
+                }
+            });
+        },
+        
+        close() {
+            this.overlay.removeClass('show');
+            setTimeout(() => {
+                this.dialog.html('');
+            }, 200);
+        }
+    };
+    
     let selectedFiles = [];
     let isConverting = false;
     let beforeImage = null;
@@ -92,10 +241,17 @@
         const maxFiles = icData.capabilities.bulk_processing ? -1 : 1;
         
         // Click to browse
-        $uploadArea.on('click', function() {
+        $uploadArea.on('click', function(e) {
             if (!isConverting) {
-                $fileInput.click();
+                // Prevent event from being blocked by child elements
+                e.stopPropagation();
+                $fileInput[0].click();
             }
+        });
+        
+        // Also allow direct clicks on file input
+        $fileInput.on('click', function(e) {
+            e.stopPropagation();
         });
         
         // Drag and drop
@@ -429,7 +585,14 @@
         $results.append($item);
         
         // Auto-download the file
-        triggerDownload(data.url, data.filename);
+        // Ensure filename has proper extension
+        let downloadFilename = data.filename;
+        if (!downloadFilename || downloadFilename.endsWith('.undefined')) {
+            const targetFormat = $('#ic-target-format').val() || 'jpg';
+            const baseName = selectedFiles.length > 0 ? selectedFiles[0].name.replace(/\.[^/.]+$/, '') : 'converted';
+            downloadFilename = baseName + '.' + targetFormat;
+        }
+        triggerDownload(data.url, downloadFilename);
     }
     
     /**
@@ -510,7 +673,8 @@
             if (afterImage) {
                 const link = document.createElement('a');
                 link.href = afterImage;
-                link.download = 'converted-image.' + $('#ic-format').val();
+                const targetFormat = $('#ic-target-format').val() || 'jpg';
+                link.download = 'converted-image.' + targetFormat;
                 link.click();
                 ImagineerToast.success('Downloaded!', 'Converted image saved');
             }
@@ -543,15 +707,15 @@
             </div>
             <div class="ic-comparison-slider">
                 <div class="ic-comparison-before">
-                    <img src="${original}" alt="Before">
+                    <img src="${original}" alt="Before" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
                 <div class="ic-comparison-after" style="clip-path: inset(0 50% 0 0);">
-                    <img src="${converted}" alt="After">
+                    <img src="${converted}" alt="After" style="width: 100%; height: 100%; object-fit: cover;">
                 </div>
                 <div class="ic-comparison-handle" style="left: 50%;"></div>
                 <div class="ic-comparison-labels">
-                    <span class="ic-comparison-label">Original</span>
-                    <span class="ic-comparison-label">Converted</span>
+                    <span class="ic-comparison-label">Before</span>
+                    <span class="ic-comparison-label">After</span>
                 </div>
             </div>
             <div class="ic-comparison-actions">

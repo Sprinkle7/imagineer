@@ -34,8 +34,16 @@ class Imagineer_Core {
     /**
      * All features are now free!
      */
+    /**
+     * Check if Pro features are active
+     * DISABLED: Always returns true - all features are available
+     */
     public function is_pro_active() {
-        return true; // All features are free
+        // LICENSE SYSTEM DISABLED - Always return true
+        return true;
+        
+        /* ORIGINAL CODE - COMMENTED OUT
+        return true; // All features are free */ 
     }
     
     

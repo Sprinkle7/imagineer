@@ -4,7 +4,7 @@
  */
 
 if (!defined('ABSPATH')) {
-    exit;
+    exit; // Exit if accessed directly
 }
 
 class Imagineer_Admin {
@@ -77,7 +77,14 @@ class Imagineer_Admin {
      * Enqueue admin scripts and styles
      */
     public function enqueue_admin_scripts($hook) {
-        if ($hook !== 'toplevel_page_imagineer') {
+        // Load scripts on main page, settings page, and media library page
+        $allowed_hooks = array(
+            'toplevel_page_imagineer',
+            'imagineer_page_imagineer-settings',
+            'imagineer_page_imagineer-media-library'
+        );
+        
+        if (!in_array($hook, $allowed_hooks)) {
             return;
         }
         
@@ -87,6 +94,22 @@ class Imagineer_Admin {
             array(),
             IC_VERSION
         );
+        
+        // Add inline styles for media library page
+        if ($hook === 'imagineer_page_imagineer-media-library') {
+            wp_add_inline_style('ic-admin-style', '
+                a.page-numbers {
+                    padding: 10px;
+                    background: white;
+                    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+                }
+                span.page-numbers.current {
+                    background: #e0dcdc;
+                    padding: 10px;
+                    box-shadow: 0 0 2px rgba(0, 0, 0, 0.2);
+                }
+            ');
+        }
         
         wp_enqueue_script(
             'ic-admin-script',
@@ -148,85 +171,14 @@ class Imagineer_Admin {
             <div class="ic-header-section">
                 <div>
                     <h1 class="ic-main-title"><?php echo esc_html(get_admin_page_title()); ?></h1>
-                    <p class="ic-subtitle"><?php _e('Convert and optimize images in seconds', 'imagineer'); ?></p>
+                    <!-- <p class="ic-subtitle"><?php _e('Convert and optimize images in seconds', 'imagineer'); ?></p> -->
                 </div>
-                <?php if ($is_pro): ?>
-                <div class="ic-pro-badge">
-                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-                        <path d="M10 1l2.928 6.472L20 8.472l-5 5.164 1.18 7.364L10 17.472 3.82 21l1.18-7.364-5-5.164 7.072-1 L10 1z" fill="currentColor"/>
-                    </svg>
-                    <?php _e('PRO', 'imagineer'); ?>
-                </div>
-                <?php endif; ?>
+               
             </div>
-            
-            <!-- Stats Cards -->
-            <div class="ic-stats-grid">
-                <div class="ic-stat-card ic-stat-primary">
-                    <div class="ic-stat-icon">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <path d="M16 4v24M4 16h24" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
-                            <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="2" fill="none"/>
-                        </svg>
-                    </div>
-                    <div class="ic-stat-content">
-                        <div class="ic-stat-value"><?php echo number_format($total_conversions); ?></div>
-                        <div class="ic-stat-label"><?php _e('Total Conversions', 'imagineer'); ?></div>
-                    </div>
-                </div>
-                
-                <div class="ic-stat-card ic-stat-success">
-                    <div class="ic-stat-icon">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <path d="M20 12l-8 8-4-4" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-                            <rect x="4" y="4" width="24" height="24" rx="4" stroke="currentColor" stroke-width="2" fill="none"/>
-                        </svg>
-                    </div>
-                    <div class="ic-stat-content">
-                        <div class="ic-stat-value"><?php echo $this->format_file_size($total_saved); ?></div>
-                        <div class="ic-stat-label"><?php _e('Space Saved', 'imagineer'); ?></div>
-                    </div>
-                </div>
-                
-                <div class="ic-stat-card ic-stat-info">
-                    <div class="ic-stat-icon">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <circle cx="16" cy="16" r="12" stroke="currentColor" stroke-width="2" fill="none"/>
-                            <path d="M16 10v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                    <div class="ic-stat-content">
-                        <div class="ic-stat-value"><?php echo number_format($today_conversions); ?></div>
-                        <div class="ic-stat-label"><?php _e('Today', 'imagineer'); ?></div>
-                    </div>
-                </div>
-                
-                <div class="ic-stat-card ic-stat-warning">
-                    <div class="ic-stat-icon">
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <path d="M4 8h24M4 16h24M4 24h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                    </div>
-                    <div class="ic-stat-content">
-                        <div class="ic-stat-value"><?php echo $formats[0]->target_format ?? 'N/A'; ?></div>
-                        <div class="ic-stat-label"><?php _e('Top Format', 'imagineer'); ?></div>
-                    </div>
-                </div>
-            </div>
-            
+       
             <!-- Conversion Presets -->
             <?php Imagineer_Presets::render_preset_selector(); ?>
             
-            <!-- Support Banner -->
-            <div class="ic-coffee-banner" style="background: linear-gradient(135deg, #ff813f 0%, #ff4b2b 100%); color: white; padding: 24px 28px; border-radius: 12px; margin-bottom: 24px; box-shadow: 0 4px 12px rgba(255, 75, 43, 0.25); text-align: center;">
-                <h3 style="color: white; margin: 0 0 12px 0; font-size: 20px;">☕ Enjoying Imagineer?</h3>
-                <p style="margin: 0 0 8px 0; opacity: 0.95; font-size: 14px;">All features are completely free! If you find this plugin helpful, consider buying me a coffee to support continued development.</p>
-                <p style="margin: 0 0 16px 0; opacity: 0.9; font-size: 13px;">📧 Feedback or Support: <a href="mailto:allauddinyousafxai@gmail.com" style="color: white; text-decoration: underline;">allauddinyousafxai@gmail.com</a></p>
-                <a href="https://www.buymeacoffee.com/adusafxai" target="_blank" class="button button-large" style="background: white; color: #ff4b2b; border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s ease;">
-                    <span style="font-size: 20px;">☕</span>
-                    <span>Buy Me a Coffee</span>
-                </a>
-            </div>
             
             <?php if (false): // Hidden upgrade banner ?>
             <div style="display: none;">
@@ -239,13 +191,7 @@ class Imagineer_Admin {
             <?php 
             endif;
             
-            // Handle Pro test activation
-            if (isset($_POST['ic_enable_pro_test']) && check_admin_referer('ic_enable_pro_test')) {
-                update_option('ic_is_pro', true);
-                update_option('ic_license_key', 'TEST-' . time());
-                echo '<div class="notice notice-success"><p><strong>Pro Mode Enabled!</strong> Refresh the page to see Pro features.</p></div>';
-                echo '<meta http-equiv="refresh" content="2">';
-            }
+            // Pro test activation removed - all features are free
             ?>
             
             <?php 
@@ -269,7 +215,7 @@ class Imagineer_Admin {
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
                     <div>
                         <strong>Image Editor:</strong> 
-                        <?php echo $editor_info['imagick_available'] ? '✅ Imagick (Fastest)' : ($editor_info['gd_available'] ? '✅ GD Library' : '❌ None'); ?>
+                        <?php echo esc_html($editor_info['imagick_available'] ? '✅ Imagick (Fastest)' : ($editor_info['gd_available'] ? '✅ GD Library' : '❌ None')); ?>
                     </div>
                     <div>
                         <strong>WebP Support:</strong> 
@@ -286,7 +232,7 @@ class Imagineer_Admin {
                     </div>
                     <div>
                         <strong>Cache:</strong> 
-                        <?php echo $editor_info['cache_enabled'] ? '✅ Enabled' : '❌ Disabled'; ?>
+                        <?php echo esc_html($editor_info['cache_enabled'] ? '✅ Enabled' : '❌ Disabled'); ?>
                     </div>
                     <div>
                         <strong>Memory Limit:</strong> 
@@ -305,7 +251,7 @@ class Imagineer_Admin {
                         </svg>
                         <h3><?php _e('Drag & Drop Images Here', 'imagineer'); ?></h3>
                         <p><?php _e('or click to browse', 'imagineer'); ?></p>
-                        <input type="file" id="ic-file-input" accept="image/png,image/jpeg,image/jpg,image/webp" <?php echo $capabilities['bulk_processing'] ? 'multiple' : ''; ?>>
+                        <input type="file" id="ic-file-input" accept="image/png,image/jpeg,image/jpg,image/webp,image/gif,image/bmp,image/tiff,image/tif" <?php echo $capabilities['bulk_processing'] ? 'multiple' : ''; ?> style="position: absolute; opacity: 0; width: 100%; height: 100%; cursor: pointer; z-index: 10; display: none;">
                         <p class="ic-file-info">
                             <?php 
                             printf(
@@ -343,9 +289,9 @@ class Imagineer_Admin {
                                 }
                             }
                             ?>
-                            <option value="tiff">TIFF</option>
-                            <option value="bmp">BMP</option>
                             <option value="gif">GIF</option>
+                            <option value="bmp">BMP</option>
+                            <option value="tiff">TIFF</option>
                         </select>
                     </div>
                     
@@ -388,19 +334,20 @@ class Imagineer_Admin {
                 </div>
             </div>
             
-            <?php if ($is_pro): 
-                // Get statistics
+            <?php 
+                // Get statistics (show for all users now)
                 $stats = array(
                     'total_conversions' => get_option('ic_total_conversions', 0),
                     'total_space_saved' => get_option('ic_total_space_saved', 0),
                     'space_saved_formatted' => size_format(get_option('ic_total_space_saved', 0)),
                     'total_uploads' => get_option('ic_total_uploads', 0),
-                    'total_downloads' => get_option('ic_total_downloads', 0)
+                    'total_downloads' => get_option('ic_total_downloads', 0),
+                    'files_processed' => get_option('ic_total_conversions', 0) // Same as conversions
                 );
                 
-                // Get recent conversions
+                // Get recent conversions (last 20 for better history)
                 $recent_conversions = get_option('ic_recent_conversions', array());
-                $recent_conversions = array_slice($recent_conversions, -5); // Last 5
+                $recent_conversions = array_slice(array_reverse($recent_conversions), 0, 20); // Last 20, newest first
             ?>
             <div class="ic-pro-features">
                 <h2><?php _e('Statistics & History', 'imagineer'); ?></h2>
@@ -434,93 +381,69 @@ class Imagineer_Admin {
                             <span class="dashicons dashicons-images-alt2" style="font-size: 24px; width: auto; height: auto;"></span>
                         </div>
                         <div class="ic-stat-content">
-                            <div class="ic-stat-value"><?php echo number_format($stats['total_uploads']); ?></div>
+                            <div class="ic-stat-value"><?php echo number_format($stats['files_processed']); ?></div>
                             <div class="ic-stat-label"><?php _e('Files Processed', 'imagineer'); ?></div>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Conversion Trends Chart -->
-                <div class="ic-chart-section" style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0;">
-                    <h3><?php _e('Format Distribution', 'imagineer'); ?></h3>
-                    <?php 
-                    // Calculate format distribution
-                    $format_counts = array();
-                    foreach ($recent_conversions as $conv) {
-                        $key = strtoupper($conv['from']) . ' → ' . strtoupper($conv['to']);
-                        if (!isset($format_counts[$key])) {
-                            $format_counts[$key] = 0;
-                        }
-                        $format_counts[$key]++;
-                    }
-                    
-                    if (!empty($format_counts)):
-                        arsort($format_counts);
-                        $max_count = max($format_counts);
-                    ?>
-                    <div style="margin-top: 15px;">
-                        <?php foreach ($format_counts as $format => $count): 
-                            $percentage = ($count / $max_count) * 100;
-                        ?>
-                        <div style="margin-bottom: 10px;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                                <span><strong><?php echo esc_html($format); ?></strong></span>
-                                <span><?php echo $count; ?> conversion<?php echo $count > 1 ? 's' : ''; ?></span>
-                            </div>
-                            <div style="background: #e0e0e0; height: 20px; border-radius: 10px; overflow: hidden;">
-                                <div style="background: linear-gradient(90deg, #667eea 0%, #764ba2 100%); height: 20px; width: <?php echo $percentage; ?>%;"></div>
-                            </div>
+
+                <div class="ic-history-section" style="margin-top: 30px;">
+                    <h3 style="margin-bottom: 15px;"><?php _e('Recent Conversion History', 'imagineer'); ?></h3>
+                    <?php if (empty($recent_conversions)): ?>
+                        <div style="background: #f5f5f5; padding: 30px; border-radius: 8px; text-align: center; color: #666;">
+                            <p style="margin: 0; font-size: 16px;"><?php _e('No conversions yet. Start converting images to see statistics here!', 'imagineer'); ?></p>
                         </div>
-                        <?php endforeach; ?>
-                    </div>
                     <?php else: ?>
-                    <p style="color: #666; font-style: italic;"><?php _e('No conversions yet. Start converting to see statistics!', 'imagineer'); ?></p>
-                    <?php endif; ?>
-                </div>
-                
-                <?php if (!empty($recent_conversions)): ?>
-                <div class="ic-history-section">
-                    <h3><?php _e('Recent Conversions', 'imagineer'); ?></h3>
-                    <table class="ic-history-table">
-                        <thead>
-                            <tr>
-                                <th><?php _e('Date', 'imagineer'); ?></th>
-                                <th><?php _e('File', 'imagineer'); ?></th>
-                                <th><?php _e('From → To', 'imagineer'); ?></th>
-                                <th><?php _e('Original', 'imagineer'); ?></th>
-                                <th><?php _e('Converted', 'imagineer'); ?></th>
-                                <th><?php _e('Saved', 'imagineer'); ?></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <?php foreach (array_reverse($recent_conversions) as $conversion): ?>
-                            <tr>
-                                <td><?php echo esc_html($conversion['date']); ?></td>
-                                <td><?php echo esc_html($conversion['filename']); ?></td>
-                                <td><?php echo strtoupper($conversion['from']) . ' → ' . strtoupper($conversion['to']); ?></td>
-                                <td><?php echo size_format($conversion['original_size']); ?></td>
-                                <td><?php echo size_format($conversion['converted_size']); ?></td>
-                                <td style="color: <?php echo $conversion['space_saved'] > 0 ? 'green' : 'red'; ?>">
-                                    <?php echo $conversion['space_saved'] > 0 ? '-' : '+'; ?>
-                                    <?php echo size_format(abs($conversion['space_saved'])); ?>
-                                </td>
-                            </tr>
-                            <?php endforeach; ?>
-                        </tbody>
-                    </table>
-                    <form method="post" style="margin-top: 15px;">
+                    <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        <table class="ic-history-table" style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="background: #f8f9fa; border-bottom: 2px solid #e0e0e0;">
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;"><?php _e('Date & Time', 'imagineer'); ?></th>
+                                    <th style="padding: 12px; text-align: left; font-weight: 600; color: #333;"><?php _e('File Name', 'imagineer'); ?></th>
+                                    <th style="padding: 12px; text-align: center; font-weight: 600; color: #333;"><?php _e('From → To', 'imagineer'); ?></th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: #333;"><?php _e('Original Size', 'imagineer'); ?></th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: #333;"><?php _e('Converted Size', 'imagineer'); ?></th>
+                                    <th style="padding: 12px; text-align: right; font-weight: 600; color: #333;"><?php _e('Space Saved', 'imagineer'); ?></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php foreach ($recent_conversions as $conversion): ?>
+                                <tr style="border-bottom: 1px solid #f0f0f0;">
+                                    <td style="padding: 12px; color: #666; font-size: 13px;"><?php echo esc_html($conversion['date']); ?></td>
+                                    <td style="padding: 12px; color: #333; font-weight: 500;"><?php echo esc_html($conversion['filename']); ?></td>
+                                    <td style="padding: 12px; text-align: center;">
+                                        <span style="background: #667eea; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-right: 5px;"><?php echo esc_html(strtoupper($conversion['from'])); ?></span>
+                                        <span style="color: #999;">→</span>
+                                        <span style="background: #46b450; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; margin-left: 5px;"><?php echo esc_html(strtoupper($conversion['to'])); ?></span>
+                                    </td>
+                                    <td style="padding: 12px; text-align: right; color: #666; font-size: 13px;"><?php echo size_format($conversion['original_size']); ?></td>
+                                    <td style="padding: 12px; text-align: right; color: #666; font-size: 13px;"><?php echo size_format($conversion['converted_size']); ?></td>
+                                    <td style="padding: 12px; text-align: right; font-weight: 600; color: <?php echo $conversion['space_saved'] > 0 ? '#46b450' : '#dc3232'; ?>; font-size: 14px;">
+                                        <?php if ($conversion['space_saved'] > 0): ?>
+                                            <span style="color: #46b450;">↓ -<?php echo size_format($conversion['space_saved']); ?></span>
+                                            <small style="color: #999; margin-left: 5px;">(<?php echo round(($conversion['space_saved'] / $conversion['original_size']) * 100, 1); ?>%)</small>
+                                        <?php else: ?>
+                                            <span style="color: #dc3232;">↑ +<?php echo size_format(abs($conversion['space_saved'])); ?></span>
+                                        <?php endif; ?>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                    <?php endif; // End of if (!empty($recent_conversions)) ?>
+                    <form method="post" id="ic-history-form" style="margin-top: 20px;">
                         <?php wp_nonce_field('ic_clear_history'); ?>
-                        <button type="submit" name="ic_clear_history" class="button" onclick="return confirm('Clear all conversion history?')">
+                        <button type="button" class="button ic-clear-history-btn" style="margin-right: 10px;">
                             <?php _e('Clear History', 'imagineer'); ?>
                         </button>
-                        <button type="submit" name="ic_export_stats" class="button button-primary" style="margin-left: 10px;">
+                        <button type="submit" name="ic_export_stats" class="button button-primary">
                             <?php _e('Export Statistics (CSV)', 'imagineer'); ?>
                         </button>
                     </form>
                 </div>
-                <?php endif; ?>
                 
-                <div class="ic-features-grid">
+                <!-- <div class="ic-features-grid">
                     <div class="ic-feature-card">
                         <h3>🔄 Media Library</h3>
                         <p>Convert directly from WordPress Media Library</p>
@@ -537,9 +460,8 @@ class Imagineer_Admin {
                         <h3>🔌 REST API</h3>
                         <p>Developer-friendly API access</p>
                     </div>
-                </div>
+                </div> -->
             </div>
-            <?php endif; ?>
         </div>
         <?php
     }
@@ -556,6 +478,11 @@ class Imagineer_Admin {
             update_option('ic_auto_compress_size', intval($_POST['ic_auto_compress_size']));
             update_option('ic_auto_convert_png', isset($_POST['ic_auto_convert_png']));
             update_option('ic_auto_convert_jpg', isset($_POST['ic_auto_convert_jpg']));
+            update_option('ic_default_quality', isset($_POST['ic_default_quality']) ? max(1, min(100, intval($_POST['ic_default_quality']))) : 80);
+            update_option('ic_maintain_resolution', isset($_POST['ic_maintain_resolution']));
+            update_option('ic_enable_backups', isset($_POST['ic_enable_backups']));
+            
+            // License activation removed - all features are free
             
             echo '<div class="notice notice-success"><p>' . __('Settings saved!', 'imagineer') . '</p></div>';
         }
@@ -647,13 +574,56 @@ class Imagineer_Admin {
                             <p class="description"><?php _e('Automatically convert uploaded images to WEBP format to save space.', 'imagineer'); ?></p>
                         </td>
                     </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Default Conversion Quality', 'imagineer'); ?></th>
+                        <td>
+                            <label>
+                                <?php _e('Quality (1-100):', 'imagineer'); ?>
+                                <input type="number" name="ic_default_quality" value="<?php echo esc_attr(get_option('ic_default_quality', 80)); ?>" min="1" max="100" style="width: 100px; margin-left: 10px;">
+                            </label>
+                            <p class="description">
+                                <?php _e('Default quality for image conversions. Higher = better quality but larger file size. Recommended: 80-90 for WebP, 85-95 for JPG.', 'imagineer'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Maintain Resolution', 'imagineer'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="ic_maintain_resolution" value="1" <?php checked(get_option('ic_maintain_resolution', true)); ?>>
+                                <?php _e('Always maintain original image resolution when converting', 'imagineer'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('When enabled, converted images will have the same dimensions as the original. Disable only if you want to resize during conversion.', 'imagineer'); ?>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <tr>
+                        <th scope="row"><?php _e('Backup & Restore', 'imagineer'); ?></th>
+                        <td>
+                            <label>
+                                <input type="checkbox" name="ic_enable_backups" value="1" <?php checked(get_option('ic_enable_backups', true)); ?>>
+                                <?php _e('Enable automatic backups before replacing originals', 'imagineer'); ?>
+                            </label>
+                            <p class="description">
+                                <?php _e('When enabled, original images are backed up before conversion. You can restore them later if needed.', 'imagineer'); ?>
+                            </p>
+                        </td>
+                    </tr>
                 </table>
+                
+                <!-- License section removed - all features are now free -->
                 
                 <?php submit_button(__('Save Settings', 'imagineer'), 'primary', 'ic_save_settings'); ?>
             </form>
             </div>
             
             <?php elseif ($active_tab === 'shortcodes'): ?>
+            <!-- Format Requirements Section -->
+            
             <div class="ic-shortcodes-section">
                 <div style="background: white; padding: 30px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
                     <h2 style="margin-top: 0;"><?php _e('Available Shortcodes', 'imagineer'); ?></h2>
@@ -704,7 +674,7 @@ class Imagineer_Admin {
                                     <summary style="cursor: pointer; color: #667eea; font-weight: 600;">Options</summary>
                                     <ul style="margin: 10px 0; padding-left: 20px; font-size: 13px;">
                                         <li><code>from="png"</code> - Source format (png/jpg/webp/auto)</li>
-                                        <li><code>to="jpg"</code> - Target format (jpg/png/webp)</li>
+                                        <li><code>to="jpg"</code> - Target format (jpg/png/webp/gif/bmp/tiff)</li>
                                         <li><code>quality="80"</code> - Conversion quality</li>
                                     </ul>
                                 </details>
@@ -760,18 +730,7 @@ class Imagineer_Admin {
                         </div>
                     </div>
                     
-                    <!-- Quick Copy -->
-                    <div style="margin-top: 40px; padding: 25px; background: #f0f9ff; border: 2px solid #bae6fd; border-radius: 8px;">
-                        <h3 style="margin-top: 0; color: #0369a1;">💡 Quick Start</h3>
-                        <ol style="margin: 0; padding-left: 20px;">
-                            <li style="margin-bottom: 10px;">Create a new page (e.g., "PNG to JPG Converter")</li>
-                            <li style="margin-bottom: 10px;">Copy one of the shortcodes above</li>
-                            <li style="margin-bottom: 10px;">Paste it into your page content</li>
-                            <li style="margin-bottom: 10px;">Publish and visit the page</li>
-                            <li>Users can now convert images on your website!</li>
-                        </ol>
-                    </div>
-                    
+                   
                     <!-- Example Page Templates -->
                     <div style="margin-top: 30px;">
                         <h3 style="color: #333;">📄 Example Page Templates</h3>
@@ -841,49 +800,79 @@ class Imagineer_Admin {
                     </div>
                     
                     <!-- Features List -->
-                    <div style="margin-top: 30px;">
-                        <h3 style="color: #333;">✨ Shortcode Features</h3>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
-                            <div style="padding: 15px; background: #f0fff4; border-left: 4px solid #46b450; border-radius: 4px;">
-                                <strong>✅ Auto-Download</strong><br>
-                                <small style="color: #666;">Converted files download automatically</small>
-                            </div>
-                            <div style="padding: 15px; background: #f0fff4; border-left: 4px solid #46b450; border-radius: 4px;">
-                                <strong>✅ Drag & Drop</strong><br>
-                                <small style="color: #666;">Easy file upload interface</small>
-                            </div>
-                            <div style="padding: 15px; background: #f0fff4; border-left: 4px solid #46b450; border-radius: 4px;">
-                                <strong>✅ Mobile Friendly</strong><br>
-                                <small style="color: #666;">Works on all devices</small>
-                            </div>
-                            <div style="padding: 15px; background: #f0fff4; border-left: 4px solid #46b450; border-radius: 4px;">
-                                <strong>✅ Beautiful UI</strong><br>
-                                <small style="color: #666;">Professional gradient design</small>
-                            </div>
-                        </div>
+            <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-top:2em; padding: 30px; border-radius: 12px; margin-bottom: 0px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <h2 style="margin-top: 0; color: white;">📋 Format Requirements & Compatibility</h2>
+                <p style="color: rgba(255,255,255,0.9); margin-bottom: 20px;">Different image formats have different requirements. Here's what you need:</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 20px;">
+                    <!-- PNG, JPG, WEBP -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                        <h3 style="margin: 0 0 10px; color: white; font-size: 18px;">✅ PNG, JPG, WEBP</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">
+                            <strong>Requirements:</strong> Standard GD Library (included in PHP 7.2+)<br>
+                            <strong>Status:</strong> Works on 99% of WordPress hosts<br>
+                            <strong>No setup needed!</strong>
+                        </p>
                     </div>
+                    
+                    <!-- GIF, BMP -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                        <h3 style="margin: 0 0 10px; color: white; font-size: 18px;">✅ GIF, BMP</h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">
+                            <strong>Requirements:</strong> GD Library with PHP 7.2+<br>
+                            <strong>Status:</strong> Works on most modern hosts<br>
+                            <strong>No extra setup needed!</strong>
+                        </p>
+                    </div>
+                    
+                    <!-- TIFF -->
+                    <div style="background: rgba(255,255,255,0.15); padding: 20px; border-radius: 8px; backdrop-filter: blur(10px);">
+                        <h3 style="margin: 0 0 10px; color: white; font-size: 18px;">
+                            <?php 
+                            $imagick_available = extension_loaded('imagick') && class_exists('Imagick');
+                            echo $imagick_available ? '✅' : '⚠️';
+                            ?> TIFF
+                        </h3>
+                        <p style="margin: 0; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.6;">
+                            <strong>Requirements:</strong> Imagick PHP extension<br>
+                            <strong>Status:</strong> <?php echo $imagick_available ? '<span style="color: #90EE90;">Available</span>' : '<span style="color: #FFB6C1;">Not Available</span>'; ?><br>
+                            <?php if (!$imagick_available): ?>
+                                <strong style="color: #FFB6C1;">Contact your host to enable Imagick</strong>
+                            <?php else: ?>
+                                <strong>Ready to use!</strong>
+                            <?php endif; ?>
+                        </p>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(255,255,255,0.2); padding: 20px; border-radius: 8px; margin-top: 20px; backdrop-filter: blur(10px);">
+                    <h3 style="margin: 0 0 15px; color: white; font-size: 16px;">💡 Need TIFF Support?</h3>
+                    <ul style="margin: 0; padding-left: 20px; color: rgba(255,255,255,0.9); font-size: 14px; line-height: 1.8;">
+                        <li><strong>Shared Hosting:</strong> Contact your hosting provider to enable Imagick extension</li>
+                        <li><strong>VPS/Dedicated:</strong> Install via package manager (e.g., <code style="background: rgba(0,0,0,0.2); padding: 2px 6px; border-radius: 3px;">sudo apt-get install php-imagick</code>)</li>
+                        <li><strong>Note:</strong> PNG, JPG, WEBP, GIF, and BMP work without Imagick</li>
+                    </ul>
+                </div>
+            </div>
+                   
                 </div>
             </div>
             <?php endif; ?>
             
-            <!-- Support Banner -->
-            <div class="ic-coffee-banner" style="background: linear-gradient(135deg, #ff813f 0%, #ff4b2b 100%); color: white; padding: 24px 28px; border-radius: 12px; margin-top: 24px; box-shadow: 0 4px 12px rgba(255, 75, 43, 0.25); text-align: center;">
-                <h3 style="color: white; margin: 0 0 12px 0; font-size: 20px;">☕ Enjoying Imagineer?</h3>
-                <p style="margin: 0 0 8px 0; opacity: 0.95; font-size: 14px;">All features are completely free! If you find this plugin helpful, consider buying me a coffee to support continued development.</p>
-                <p style="margin: 0 0 16px 0; opacity: 0.9; font-size: 13px;">📧 Feedback or Support: <a href="mailto:allauddinyousafxai@gmail.com" style="color: white; text-decoration: underline;">allauddinyousafxai@gmail.com</a></p>
-                <a href="https://www.buymeacoffee.com/adusafxai" target="_blank" class="button button-large" style="background: white; color: #ff4b2b; border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 20px;">☕</span>
-                    <span><?php _e('Buy Me a Coffee', 'imagineer'); ?></span>
-                </a>
-            </div>
+            
         </div>
         <?php
     }
     
     /**
-     * Activate license (validates with your server)
+     * Activate license (REMOVED - all features are free)
+     * This method is no longer used
      */
     private function activate_license($license_key) {
+        // Method disabled - all features are free
+        return;
+        
+        /* ORIGINAL CODE - COMMENTED OUT
         $purchase_code = isset($_POST['ic_purchase_code']) ? sanitize_text_field($_POST['ic_purchase_code']) : '';
         
         // Basic validation
@@ -923,6 +912,7 @@ class Imagineer_Admin {
             'success' => false,
             'message' => $result['message'] ?? __('License validation failed. Please check your License Key and Purchase Code.', 'imagineer')
         );
+        */
     }
     
     /**
@@ -999,23 +989,11 @@ class Imagineer_Admin {
         $total_images = $query->found_posts;
         $total_pages = $query->max_num_pages;
         ?>
-        <style>
-            a.page-numbers {
-                padding: 10px;
-                background: white;
-                box-shadow: 0 0 2px rgba(0, 0, 0, 0.2   );
-            }
-            span.page-numbers.current {
-                background: #e0dcdc;
-                padding: 10px;
-                box-shadow: 0 0 2px rgba(0, 0, 0, 0.2   );
-            }
-        </style>
         <div class="wrap ic-media-library-wrap">
             <h1><?php _e('Media Library Converter', 'imagineer'); ?></h1>
             
             <div class="ic-ml-toolbar" style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
-                <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+                <div style="display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px;">
                     <div style="flex: 1; min-width: 250px;">
                         <div style="position: relative;">
                             <input type="text" 
@@ -1038,7 +1016,6 @@ class Imagineer_Admin {
                             <option value="jpeg" <?php selected($filter_type, 'jpeg'); ?>>JPEG</option>
                             <option value="png" <?php selected($filter_type, 'png'); ?>>PNG</option>
                             <option value="webp" <?php selected($filter_type, 'webp'); ?>>WEBP</option>
-                            <option value="gif" <?php selected($filter_type, 'gif'); ?>>GIF</option>
                         </select>
                     </div>
                     
@@ -1048,20 +1025,36 @@ class Imagineer_Admin {
                     </div>
                 </div>
                 
-                <div class="ic-bulk-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                <div class="ic-bulk-actions" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #eee; display: flex; gap: 35px; align-items: anchor-center; flex-wrap: wrap;">
                     <button type="button" id="ic-select-all-btn" class="button" style="font-weight: 600;">
                         <?php _e('Select All', 'imagineer'); ?>
                     </button>
                     
                     <div>
-                        <label style="font-weight: 600; margin-right: 8px;"><?php _e('Bulk convert to:', 'imagineer'); ?></label>
-                        <select id="ic-bulk-format" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px;">
+                        <label style="font-weight: 600; margin-right: 8px; display: block; margin-bottom: 5px;"><?php _e('Bulk convert to:', 'imagineer'); ?></label>
+                        <select id="ic-bulk-format" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; min-width: 120px;">
                             <option value="">Select format...</option>
                             <option value="webp">WEBP</option>
                             <option value="jpg">JPG</option>
                             <option value="png">PNG</option>
+                            <option value="gif">GIF</option>
+                            <option value="bmp">BMP</option>
                             <option value="tiff">TIFF</option>
                         </select>
+                    </div>
+                    
+                    <div>
+                        <label style="font-weight: 600; margin-right: 8px; display: block; margin-bottom: 5px;"><?php _e('Quality:', 'imagineer'); ?></label>
+                        <input type="number" id="ic-bulk-quality" min="1" max="100" value="<?php echo esc_attr(get_option('ic_default_quality', 80)); ?>" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; width: 80px;">
+                        <span style="font-size: 12px; color: #666; margin-left: 5px;">(1-100)</span>
+                    </div>
+                    
+                    <div>
+                        <label style="font-weight: 600; margin-right: 8px; display: block; margin-bottom: 5px;"><?php _e('Maintain Resolution:', 'imagineer'); ?></label>
+                        <label style="font-weight: normal;">
+                            <input type="checkbox" id="ic-bulk-maintain-resolution" checked style="margin-right: 5px;">
+                            <?php _e('Keep original dimensions', 'imagineer'); ?>
+                        </label>
                     </div>
                     
                     <label style="font-weight: 600;">
@@ -1073,25 +1066,66 @@ class Imagineer_Admin {
                         <?php _e('Convert Selected', 'imagineer'); ?>
                     </button>
                     
-                    <span id="ic-selected-count" style="color: #666; font-weight: 600;"></span>
+                    <span id="ic-selected-count" style="color: #666; font-weight: 600;">0</span>
                 </div>
             </div>
             
             <div class="ic-media-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
                 <?php foreach ($images as $image): 
-                    $img_url = wp_get_attachment_image_url($image->ID, 'medium');
-                    $img_title = get_the_title($image->ID);
-                    $file_size = filesize(get_attached_file($image->ID));
-                    $mime_type = get_post_mime_type($image->ID);
+                    $attachment_id = $image->ID;
+                    $file_path = get_attached_file($attachment_id);
+                    
+                    // Check if file exists, if not try to get from metadata
+                    if (!$file_path || !file_exists($file_path)) {
+                        $metadata = wp_get_attachment_metadata($attachment_id);
+                        if ($metadata && isset($metadata['file'])) {
+                            $upload_dir = wp_upload_dir();
+                            $file_path = $upload_dir['basedir'] . '/' . $metadata['file'];
+                        }
+                    }
+                    
+                    // If still no file, skip this image
+                    if (!$file_path || !file_exists($file_path)) {
+                        error_log('Imagineer: File not found for attachment ID: ' . $attachment_id . ', path: ' . $file_path);
+                        continue;
+                    }
+                    
+                    $img_url = wp_get_attachment_image_url($attachment_id, 'medium');
+                    // Fallback to full size if medium doesn't exist
+                    if (!$img_url) {
+                        $img_url = wp_get_attachment_image_url($attachment_id, 'full');
+                    }
+                    // Final fallback to direct file URL
+                    if (!$img_url) {
+                        $upload_dir = wp_upload_dir();
+                        $img_url = str_replace($upload_dir['basedir'], $upload_dir['baseurl'], $file_path);
+                    }
+                    
+                    $img_title = get_the_title($attachment_id);
+                    $file_size = @filesize($file_path) ?: 0;
+                    $mime_type = get_post_mime_type($attachment_id);
+                    // If mime type not set, detect from file
+                    if (!$mime_type) {
+                        $file_info = wp_check_filetype($file_path);
+                        $mime_type = $file_info['type'] ?: 'image/jpeg';
+                    }
                     $format = strtoupper(str_replace('image/', '', $mime_type));
+                    // Fallback to file extension if format still empty
+                    if (empty($format) || $format === $mime_type) {
+                        $file_ext = strtoupper(pathinfo($file_path, PATHINFO_EXTENSION));
+                        $format = $file_ext ?: 'UNKNOWN';
+                    }
+                    
+                    // Get current file extension for restore button check (used below)
+                    $current_file_ext = strtolower(pathinfo($file_path, PATHINFO_EXTENSION));
                 ?>
-                <div class="ic-media-item" data-id="<?php echo $image->ID; ?>" style="border: 2px solid #e0e0e0; border-radius: 12px; padding: 0; background: white; transition: all 0.3s ease; position: relative; overflow: hidden; cursor: pointer;">
-                    <div style="position: relative;" onclick="document.querySelector('.ic-ml-checkbox[data-id=&quot;<?php echo $image->ID; ?>&quot;]').click();">
-                        <input type="checkbox" class="ic-ml-checkbox" data-id="<?php echo $image->ID; ?>" style="position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; cursor: pointer; z-index: 10;" onclick="event.stopPropagation();">
+                <div class="ic-media-item" data-id="<?php echo $attachment_id; ?>" style="border: 2px solid #e0e0e0; border-radius: 12px; padding: 0; background: white; transition: all 0.3s ease; position: relative; overflow: hidden; cursor: pointer;">
+                    <div style="position: relative;" onclick="document.querySelector('.ic-ml-checkbox[data-id=&quot;<?php echo $attachment_id; ?>&quot;]').click();">
+                        <input type="checkbox" class="ic-ml-checkbox" data-id="<?php echo $attachment_id; ?>" style="position: absolute; top: 10px; left: 10px; width: 22px; height: 22px; cursor: pointer; z-index: 10;" onclick="event.stopPropagation();">
                         <div style="background: #667eea; color: white; padding: 5px 12px; font-size: 11px; font-weight: bold; position: absolute; top: 10px; right: 10px; border-radius: 15px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
                             <?php echo esc_html($format); ?>
                         </div>
-                        <img src="<?php echo esc_url($img_url); ?>" alt="<?php echo esc_attr($img_title); ?>" style="width: 100%; height: 200px; object-fit: cover; display: block;">
+                        <img src="<?php echo esc_url($img_url); ?>" alt="<?php echo esc_attr($img_title); ?>" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'200\'%3E%3Crect fill=\'%23ddd\' width=\'200\' height=\'200\'/%3E%3Ctext fill=\'%23999\' font-family=\'sans-serif\' font-size=\'14\' dy=\'10.5\' font-weight=\'bold\' x=\'50%25\' y=\'50%25\' text-anchor=\'middle\'%3EImage Not Found%3C/text%3E%3C/svg%3E';" style="width: 100%; height: 200px; object-fit: cover; display: block;">
                     </div>
                     
                     <div style="padding: 15px; cursor: default;">
@@ -1099,25 +1133,91 @@ class Imagineer_Admin {
                             <?php echo esc_html($img_title); ?>
                         </p>
                         <p style="margin: 0 0 15px; font-size: 13px; color: #666;">
-                            <strong><?php echo size_format($file_size); ?></strong>
+                            <strong><?php echo $file_size > 0 ? size_format($file_size) : 'Unknown size'; ?></strong>
                         </p>
                         
-                        <select class="ic-ml-format" data-id="<?php echo $image->ID; ?>" style="width: 100%; margin-bottom: 10px; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 13px; cursor: pointer; transition: border-color 0.3s;">
+                        <select class="ic-ml-format" data-id="<?php echo $attachment_id; ?>" style="width: 100%; margin-bottom: 10px; padding: 10px; border: 2px solid #ddd; border-radius: 6px; font-size: 13px; cursor: pointer; transition: border-color 0.3s;">
                             <option value="">Convert to...</option>
                             <option value="webp">WEBP</option>
                             <option value="jpg">JPG</option>
                             <option value="png">PNG</option>
+                            <option value="gif">GIF</option>
+                            <option value="bmp">BMP</option>
                             <option value="tiff">TIFF</option>
                         </select>
                         
                         <label style="display: flex; align-items: center; margin-bottom: 10px; font-size: 13px; cursor: pointer; user-select: none;">
-                            <input type="checkbox" class="ic-ml-single-replace" data-id="<?php echo $image->ID; ?>" style="margin-right: 8px; width: 18px; height: 18px; cursor: pointer;">
+                            <input type="checkbox" class="ic-ml-single-replace" data-id="<?php echo $attachment_id; ?>" style="margin-right: 8px; width: 18px; height: 18px; cursor: pointer;">
                             <span style="color: #666;"><?php _e('Replace original', 'imagineer'); ?></span>
                         </label>
                         
-                        <button class="button button-primary ic-ml-convert-btn" data-id="<?php echo $image->ID; ?>" style="width: 100%; height: 42px; font-weight: 600; border-radius: 6px; font-size: 14px;">
+                        <button class="button button-primary ic-ml-convert-btn" data-id="<?php echo $attachment_id; ?>" style="width: 100%; height: 42px; font-weight: 600; border-radius: 6px; font-size: 14px;">
                             Convert
                         </button>
+                        
+                        <?php
+                        // Show restore button if backups exist AND current file format differs from backup format
+                        $backup_manager = new Imagineer_Backup();
+                        $backups = $backup_manager->get_backups($attachment_id);
+                        $show_restore = false;
+                        
+                        // Debug: Always log backup status
+                        error_log('Imagineer: Checking restore button for attachment ' . $attachment_id . ' - Backups found: ' . count($backups));
+                        
+                        if (!empty($backups) && $file_path && file_exists($file_path)) {
+                            // Use the extension we already calculated above
+                            $current_ext = $current_file_ext;
+                            error_log('Imagineer: Current file extension: ' . $current_ext . ', Path: ' . $file_path);
+                            
+                            // Sort backups by creation time (newest first) to check most recent backup
+                            usort($backups, function($a, $b) {
+                                $time_a = isset($a['created_at']) ? strtotime($a['created_at']) : 0;
+                                $time_b = isset($b['created_at']) ? strtotime($b['created_at']) : 0;
+                                return $time_b - $time_a; // Descending (newest first)
+                            });
+                            
+                            // Check the most recent backup first
+                            foreach ($backups as $index => $backup) {
+                                $backup_ext = null;
+                                $backup_source = '';
+                                
+                                // Try to get extension from backup file path
+                                if (isset($backup['backup_path']) && file_exists($backup['backup_path'])) {
+                                    $backup_ext = strtolower(pathinfo($backup['backup_path'], PATHINFO_EXTENSION));
+                                    $backup_source = 'backup_path';
+                                } elseif (isset($backup['original_filename'])) {
+                                    // Fallback: check original filename extension
+                                    $backup_ext = strtolower(pathinfo($backup['original_filename'], PATHINFO_EXTENSION));
+                                    $backup_source = 'original_filename';
+                                }
+                                
+                                error_log('Imagineer: Backup #' . $index . ' - Ext: ' . $backup_ext . ' (from ' . $backup_source . '), Path: ' . (isset($backup['backup_path']) ? $backup['backup_path'] : 'N/A'));
+                                
+                                // If we found a backup extension and it differs from current, show restore button
+                                if ($backup_ext && $current_ext !== $backup_ext) {
+                                    $show_restore = true;
+                                    error_log('Imagineer: ✓ Restore button WILL SHOW - Current: ' . $current_ext . ', Backup: ' . $backup_ext);
+                                    break;
+                                } elseif ($backup_ext) {
+                                    error_log('Imagineer: ✗ Backup #' . $index . ' format matches current (' . $current_ext . '), checking next...');
+                                }
+                            }
+                            
+                            // Debug: log if no restore button will show
+                            if (!$show_restore) {
+                                error_log('Imagineer: ✗ Restore button HIDDEN - Current ext: ' . $current_ext . ', Backups count: ' . count($backups) . ', All backups match current format');
+                            }
+                        } elseif (empty($backups)) {
+                            error_log('Imagineer: ✗ No backups found for attachment ' . $attachment_id);
+                        } elseif (!$file_path || !file_exists($file_path)) {
+                            error_log('Imagineer: ✗ File not found for attachment ' . $attachment_id . ' - Path: ' . $file_path);
+                        }
+                        
+                        if ($show_restore): ?>
+                        <button class="button ic-ml-restore-btn" data-id="<?php echo $attachment_id; ?>" style="width: 100%; margin-top: 8px; height: 36px; font-weight: 600; border-radius: 6px; font-size: 13px; background: #46b450; color: white; border: none;">
+                            ↶ Restore Original
+                        </button>
+                        <?php endif; ?>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -1147,38 +1247,40 @@ class Imagineer_Admin {
             </div>
             <?php endif; ?>
             
-            <style>
-            .ic-media-item:hover {
-                border-color: #667eea;
-                box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
-                transform: translateY(-4px);
-            }
-            .ic-media-item.selected {
-                border-color: #667eea;
-                border-width: 3px;
-                background: linear-gradient(to bottom, #f0f4ff 0%, white 100%);
-            }
-            #ic-selected-count {
-                color: #667eea;
-                padding: 8px 15px;
-                border-radius: 20px;
-                font-size: 13px;
-                background: #f0f4ff;
-                border: 2px solid #667eea;
-            }
-            .ic-ml-format:focus,
-            #ic-search-input:focus {
-                border-color: #667eea;
-                outline: none;
-                box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-            }
-            #ic-search-btn:hover {
-                background: #5568d3;
-            }
-            </style>
             
             <script>
+            // Ensure ajaxurl is defined (WordPress admin global)
+            if (typeof ajaxurl === 'undefined') {
+                var ajaxurl = (typeof icData !== 'undefined' ? icData.ajaxUrl : '<?php echo admin_url('admin-ajax.php'); ?>');
+            }
+            
+            // Wait for admin script to load (which contains ImagineerDialog)
+            function waitForDialog(callback, maxAttempts = 50) {
+                if (typeof ImagineerDialog !== 'undefined') {
+                    callback();
+                } else if (maxAttempts > 0) {
+                    setTimeout(() => waitForDialog(callback, maxAttempts - 1), 100);
+                } else {
+                    console.error('ImagineerDialog not loaded. Using fallback alerts.');
+                    // Fallback: Create a simple dialog system if not loaded
+                    window.ImagineerDialog = {
+                        alert: function(title, message, type) {
+                            alert(title + '\n\n' + message);
+                        },
+                        confirm: function(title, message, onConfirm, onCancel) {
+                            if (confirm(title + '\n\n' + message)) {
+                                if (onConfirm) onConfirm();
+                            } else {
+                                if (onCancel) onCancel();
+                            }
+                        }
+                    };
+                    callback();
+                }
+            }
+            
             jQuery(document).ready(function($) {
+                waitForDialog(function() {
                 let selectedItems = [];
                 
                 // Search functionality
@@ -1262,24 +1364,46 @@ class Imagineer_Admin {
                 // Bulk convert
                 $('#ic-bulk-convert-btn').on('click', function() {
                     if (selectedItems.length === 0) {
-                        alert('Please select at least one image');
+                        ImagineerDialog.alert('Selection Required', 'Please select at least one image to convert.', 'warning');
                         return;
                     }
                     
                     const format = $('#ic-bulk-format').val();
                     if (!format) {
-                        alert('Please select a format to convert to');
+                        ImagineerDialog.alert('Format Required', 'Please select a format to convert to.', 'warning');
                         return;
                     }
                     
+                    const quality = parseInt($('#ic-bulk-quality').val()) || <?php echo intval(get_option('ic_default_quality', 80)); ?>;
+                    const maintainResolution = $('#ic-bulk-maintain-resolution').is(':checked');
                     const replaceOriginal = $('#ic-bulk-replace').is(':checked');
                     
-                    if (replaceOriginal && !confirm(`This will REPLACE ${selectedItems.length} original images in Media Library. Continue?`)) {
+                    if (quality < 1 || quality > 100) {
+                        ImagineerDialog.alert('Invalid Quality', 'Quality must be between 1 and 100.', 'error');
                         return;
                     }
                     
+                    if (replaceOriginal) {
+                        ImagineerDialog.confirm(
+                            'Replace Original Images',
+                            `This will REPLACE ${selectedItems.length} original image(s) in Media Library. This action cannot be undone. Continue?`,
+                            () => {
+                                performBulkConvert();
+                            },
+                            () => {
+                                // Cancelled
+                            }
+                        );
+                        return;
+                    }
+                    
+                    performBulkConvert();
+                });
+                
+                function performBulkConvert() {
+                    
                     // Disable button
-                    $(this).text('Converting...').prop('disabled', true);
+                    $('#ic-bulk-convert-btn').text('Converting...').prop('disabled', true);
                     
                     // Convert each selected item
                     let completed = 0;
@@ -1287,8 +1411,14 @@ class Imagineer_Admin {
                     
                     function convertNext(index) {
                         if (index >= total) {
-                            alert(`✅ Successfully converted ${completed} of ${total} images!`);
-                            location.reload();
+                            ImagineerDialog.alert(
+                                'Conversion Complete',
+                                `Successfully converted ${completed} of ${total} image(s)!`,
+                                'success'
+                            );
+                            setTimeout(() => {
+                                location.reload();
+                            }, 2000);
                             return;
                         }
                         
@@ -1304,7 +1434,8 @@ class Imagineer_Admin {
                                 nonce: '<?php echo wp_create_nonce('ic_convert_nonce'); ?>',
                                 attachment_id: id,
                                 target_format: format,
-                                quality: 80,
+                                quality: quality,
+                                maintain_resolution: maintainResolution,
                                 replace_original: replaceOriginal
                             },
                             success: function(response) {
@@ -1330,7 +1461,7 @@ class Imagineer_Admin {
                     }
                     
                     convertNext(0);
-                });
+                }
                 
                 // Individual convert
                 $('.ic-ml-convert-btn').on('click', function() {
@@ -1340,16 +1471,32 @@ class Imagineer_Admin {
                     const replaceOriginal = $('.ic-ml-single-replace[data-id="' + id + '"]').is(':checked');
                     
                     if (!format) {
-                        alert('Please select a format');
+                        ImagineerDialog.alert('Format Required', 'Please select a format to convert to.', 'warning');
                         return;
                     }
                     
+                    // Use default quality from settings
+                    const quality = <?php echo intval(get_option('ic_default_quality', 80)); ?>;
+                    
                     // Confirm if replacing original
                     if (replaceOriginal) {
-                        if (!confirm('This will REPLACE the original image in Media Library. Are you sure?')) {
-                            return;
-                        }
+                        ImagineerDialog.confirm(
+                            'Replace Original Image',
+                            'This will REPLACE the original image in Media Library. This action cannot be undone. Are you sure?',
+                            () => {
+                                performSingleConvert($btn, id, format, quality, replaceOriginal);
+                            },
+                            () => {
+                                // Cancelled
+                            }
+                        );
+                        return;
                     }
+                    
+                    performSingleConvert($btn, id, format, quality, replaceOriginal);
+                });
+                
+                function performSingleConvert($btn, id, format, quality, replaceOriginal) {
                     
                     $btn.text('Converting...').prop('disabled', true);
                     
@@ -1361,54 +1508,130 @@ class Imagineer_Admin {
                             nonce: '<?php echo wp_create_nonce('ic_convert_nonce'); ?>',
                             attachment_id: id,
                             target_format: format,
-                            quality: 80,
+                            quality: quality,
+                            maintain_resolution: true,
                             replace_original: replaceOriginal
                         },
                         success: function(response) {
+                            console.log('Media Library conversion response:', response);
+                            
                             if (response.success) {
                                 if (replaceOriginal) {
                                     $btn.text('✅ Replaced').css('background', '#46b450');
-                                    alert('✅ Image replaced successfully in Media Library!\n\nNew format: ' + format.toUpperCase());
+                                    
+                                    const message = response.data.message || 'Image replaced successfully in Media Library!';
+                                    ImagineerDialog.alert(
+                                        'Conversion Successful',
+                                        message + '<br><br><strong>New format:</strong> ' + format.toUpperCase() + '<br><br>The page will reload to show the updated image and restore button.',
+                                        'success'
+                                    );
+                                    
+                                    // Show restore button immediately (will be confirmed on reload)
+                                    const $item = $('.ic-media-item[data-id="' + id + '"]');
+                                    if (!$item.find('.ic-ml-restore-btn').length) {
+                                        const $restoreBtn = $('<button class="button ic-ml-restore-btn" data-id="' + id + '" style="width: 100%; margin-top: 8px; height: 36px; font-weight: 600; border-radius: 6px; font-size: 13px; background: #46b450; color: white; border: none;">↶ Restore Original</button>');
+                                        $btn.after($restoreBtn);
+                                        // Attach click handler to new button
+                                        attachRestoreHandler($restoreBtn);
+                                    }
+                                    
                                     // Reload to show updated image
                                     setTimeout(() => {
                                         location.reload();
-                                    }, 1500);
+                                    }, 2000);
                                 } else {
                                     $btn.text('✅ Downloaded');
+                                    
                                     // Trigger download
                                     const link = document.createElement('a');
                                     link.href = response.data.url;
-                                    link.download = response.data.filename;
+                                    link.download = response.data.filename || 'converted.' + format;
+                                    document.body.appendChild(link);
                                     link.click();
+                                    document.body.removeChild(link);
                                     
                                     setTimeout(() => {
                                         $btn.text('Convert').prop('disabled', false);
                                     }, 2000);
                                 }
                             } else {
-                                alert('Error: ' + response.data.message);
+                                const errorMsg = response.data && response.data.message ? response.data.message : 'Conversion failed';
+                                ImagineerDialog.alert('Conversion Failed', errorMsg, 'error');
+                                console.error('Conversion error:', response.data);
                                 $btn.text('Convert').prop('disabled', false);
                             }
                         },
-                        error: function() {
-                            alert('Conversion failed');
+                        error: function(xhr, status, error) {
+                            console.error('AJAX error:', xhr, status, error);
+                            ImagineerDialog.alert('Conversion Error', 'Conversion failed: ' + error + '<br><br>Please check browser console for details.', 'error');
                             $btn.text('Convert').prop('disabled', false);
                         }
                     });
+                }
+                
+                // Restore backup functionality
+                // Function to attach restore handler (reusable)
+                function attachRestoreHandler($btn) {
+                    $btn.off('click').on('click', function() {
+                        const $restoreBtn = $(this);
+                        const id = $restoreBtn.data('id');
+                        
+                        ImagineerDialog.confirm(
+                            'Restore Original Image',
+                            'Restore the original image from backup? This will replace the current converted image.',
+                            () => {
+                                performRestore($restoreBtn, id);
+                            },
+                            () => {
+                                // Cancelled
+                            }
+                        );
+                    });
+                }
+                
+                function performRestore($restoreBtn, id) {
+                    $restoreBtn.text('Restoring...').prop('disabled', true);
+                    
+                    $.ajax({
+                        url: ajaxurl,
+                        type: 'POST',
+                        data: {
+                            action: 'ic_restore_backup',
+                            nonce: '<?php echo wp_create_nonce('ic_convert_nonce'); ?>',
+                            attachment_id: id
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $restoreBtn.text('✅ Restored').css('background', '#46b450');
+                                ImagineerDialog.alert(
+                                    'Restore Successful',
+                                    response.data.message + '<br><br>The page will reload. After reload, you can convert again and the restore button will appear.',
+                                    'success'
+                                );
+                                setTimeout(() => {
+                                    location.reload();
+                                }, 2000);
+                            } else {
+                                ImagineerDialog.alert('Restore Failed', response.data.message || 'Restore failed. Please try again.', 'error');
+                                $restoreBtn.text('↶ Restore Original').prop('disabled', false);
+                            }
+                        },
+                        error: function() {
+                            ImagineerDialog.alert('Restore Error', 'Restore failed. Please try again.', 'error');
+                            $restoreBtn.text('↶ Restore Original').prop('disabled', false);
+                        }
+                    });
+                }
+                
+                // Attach restore handlers to existing buttons
+                $('.ic-ml-restore-btn').each(function() {
+                    attachRestoreHandler($(this));
                 });
-            });
+                
+                // License activation code removed - all features are free
+                }); // End of waitForDialog callback
+            }); // End of jQuery ready
             </script>
-            
-            <!-- Support Banner -->
-            <div class="ic-coffee-banner" style="background: linear-gradient(135deg, #ff813f 0%, #ff4b2b 100%); color: white; padding: 24px 28px; border-radius: 12px; margin-top: 24px; box-shadow: 0 4px 12px rgba(255, 75, 43, 0.25); text-align: center;">
-                <h3 style="color: white; margin: 0 0 12px 0; font-size: 20px;">☕ Enjoying Imagineer?</h3>
-                <p style="margin: 0 0 8px 0; opacity: 0.95; font-size: 14px;">All features are completely free! If you find this plugin helpful, consider buying me a coffee to support continued development.</p>
-                <p style="margin: 0 0 16px 0; opacity: 0.9; font-size: 13px;">📧 Feedback or Support: <a href="mailto:allauddinyousafxai@gmail.com" style="color: white; text-decoration: underline;">allauddinyousafxai@gmail.com</a></p>
-                <a href="https://www.buymeacoffee.com/adusafxai" target="_blank" class="button button-large" style="background: white; color: #ff4b2b; border: none; padding: 12px 32px; font-weight: 600; border-radius: 8px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
-                    <span style="font-size: 20px;">☕</span>
-                    <span><?php _e('Buy Me a Coffee', 'imagineer'); ?></span>
-                </a>
-            </div>
         </div>
         <?php
     }

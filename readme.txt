@@ -1,8 +1,8 @@
 === Imagineer - Image Converter ===
 Contributors: allauddinyousafxai
-Tags: image converter, webp, png to jpg, jpg to png, image optimization, bulk converter, image resize
+Tags: image converter, webp, image optimization, bulk converter, image resize
 Requires at least: 5.0
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
 Stable tag: 1.0.0
 License: GPLv2 or later
@@ -21,14 +21,19 @@ Convert and optimize images between PNG, JPG, WEBP, TIFF, BMP, and GIF formats. 
 * **Image Resizing** - Resize while converting with custom dimensions
 * **Quality Control** - Fine-tune quality from 1-100
 * **Drag & Drop Interface** - Modern, intuitive upload experience
-* **Media Library Integration** - Convert images directly from your Media Library
-* **Statistics Dashboard** - Track conversions and space saved
-* **Conversion History** - View detailed conversion logs
-* **Frontend Shortcodes** - Add conversion tools to any page
+* **Media Library Integration** - Convert images directly from WordPress Media Library
+* **Bulk Media Library Conversion** - Select and convert multiple images at once
+* **Statistics Dashboard** - Track conversions, space saved, and files processed
+* **Conversion History** - View detailed conversion logs with file sizes
+* **Backup & Restore** - Automatic backups before replacing originals
+* **Auto-Optimize on Upload** - Automatically convert images when uploaded
+* **Frontend Shortcodes** - Add conversion tools to any page for visitors
+* **Professional Dialogs** - Modern dialog boxes instead of browser alerts
 * **Auto-Download** - Converted images download automatically
-* **Beautiful UI** - Professional, modern design
+* **Beautiful UI** - Professional, modern design with gradient cards
 * **Performance Optimized** - Fast conversions with intelligent caching
 * **50MB File Limit** - Handle large images with ease
+* **Format Requirements Checker** - See what formats are supported on your server
 
 = 🎯 Conversion Capabilities =
 
@@ -82,6 +87,29 @@ This plugin is completely free with all features unlocked! If you find it helpfu
 * PHP 7.4 or higher
 * GD Library or Imagick extension (usually pre-installed)
 
+= 📋 Format-Specific Requirements =
+
+**PNG, JPG, WEBP, GIF, BMP:**
+* Works with standard GD Library (included in PHP 7.2+)
+* No additional setup required
+* BMP support requires PHP 7.2+ (imagecreatefrombmp/imagebmp functions)
+
+**TIFF Format:**
+* Requires Imagick PHP extension
+* Imagick must be installed on your server
+* Most shared hosting providers have Imagick available
+* Contact your host if TIFF conversion shows errors
+
+**How to Check Your Server:**
+* Visit the Imagineer plugin page in WordPress admin
+* Check the "Performance Status" section (if visible)
+* Or check with your hosting provider
+
+**Installing Imagick (for TIFF support):**
+* Most hosts: Contact support to enable Imagick extension
+* VPS/Dedicated: Install via package manager (apt-get, yum, etc.)
+* Example: `sudo apt-get install php-imagick` (Ubuntu/Debian)
+
 == Installation ==
 
 1. Upload the plugin files to `/wp-content/plugins/imagineer/` directory, or install through WordPress plugins screen
@@ -107,6 +135,10 @@ Yes! All features are completely free with no limitations. No Pro version, no up
 
 Yes! The plugin works on 99% of WordPress hosts. It requires GD Library (pre-installed on most hosts) or Imagick extension.
 
+**Format Support:**
+* PNG, JPG, WEBP, GIF, BMP: Work with standard GD Library (PHP 7.2+)
+* TIFF: Requires Imagick extension (contact your host if not available)
+
 = Do I need special server setup? =
 
 No! The plugin works out-of-the-box on standard WordPress hosting. Check the Performance Status in the plugin to see what's available on your server.
@@ -114,6 +146,14 @@ No! The plugin works out-of-the-box on standard WordPress hosting. Check the Per
 = What if WebP is not supported? =
 
 The plugin includes WebP Convert library, so you can still create WEBP files even if your server doesn't have native WebP support.
+
+= What if TIFF conversion doesn't work? =
+
+TIFF format requires the Imagick PHP extension. If you see errors when converting to/from TIFF:
+1. Check if Imagick is installed (ask your hosting provider)
+2. Most shared hosts can enable Imagick upon request
+3. For VPS/dedicated servers, install via: `sudo apt-get install php-imagick`
+4. PNG, JPG, WEBP, GIF, and BMP formats work without Imagick
 
 = Can I use this on the frontend? =
 
@@ -157,13 +197,18 @@ Visit the WordPress.org support forum for this plugin. For priority support, con
 * Image resizing with custom dimensions
 * Quality control (1-100)
 * Drag and drop interface
-* Media Library integration
-* Statistics and conversion history
+* Media Library integration with bulk conversion
+* Statistics dashboard with conversion history
+* Space saved tracking
 * Auto-download functionality
-* Frontend shortcodes
+* Frontend shortcodes for public conversion tools
+* Professional dialog system (replaces browser alerts)
+* Backup and restore functionality
+* Auto-optimize on upload
 * Performance optimizations
 * WebP Convert library integration
-* Beautiful modern UI
+* Beautiful modern UI with gradient cards
+* Format requirements checker
 * All features completely free!
 
 == Upgrade Notice ==

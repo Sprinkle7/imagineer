@@ -43,17 +43,30 @@ require_once IC_PLUGIN_DIR . 'includes/class-imagineer-shortcodes.php';
 require_once IC_PLUGIN_DIR . 'includes/class-imagineer-welcome.php';
 require_once IC_PLUGIN_DIR . 'includes/class-imagineer-presets.php';
 require_once IC_PLUGIN_DIR . 'includes/class-imagineer-messages.php';
+require_once IC_PLUGIN_DIR . 'includes/class-imagineer-auto-optimize.php';
+require_once IC_PLUGIN_DIR . 'includes/class-imagineer-backup.php';
+require_once IC_PLUGIN_DIR . 'includes/class-imagineer-license.php';
+require_once IC_PLUGIN_DIR . 'includes/class-imagineer-tracking.php';
+require_once IC_PLUGIN_DIR . 'includes/class-imagineer-security.php';
 
 // Initialize the plugin
 function ic_init() {
     $core = new Imagineer_Core();
     $admin = new Imagineer_Admin();
     $ajax = new Imagineer_Ajax();
+    $auto_optimize = new Imagineer_Auto_Optimize();
+    $license = new Imagineer_License();
+    $tracking = new Imagineer_Tracking();
+    $security = new Imagineer_Security(); // Initialize security first
     
     $instances = array(
         'core' => $core,
         'admin' => $admin,
-        'ajax' => $ajax
+        'ajax' => $ajax,
+        'auto_optimize' => $auto_optimize,
+        'license' => $license,
+        'tracking' => $tracking,
+        'security' => $security
     );
     
     return $instances;

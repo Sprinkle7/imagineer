@@ -4,6 +4,10 @@
  * Quick settings for common use cases
  */
 
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+
 class Imagineer_Presets {
     
     /**

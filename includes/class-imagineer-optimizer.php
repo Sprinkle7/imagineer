@@ -16,11 +16,17 @@ class Imagineer_Optimizer {
     private $imagick_webp_support = false;
     private $memory_limit;
     private $webp_converter = null;
+    private $security = null;
     
     public function __construct() {
         $this->cache_dir = wp_upload_dir()['basedir'] . '/imagineer/cache';
         $this->check_imagick();
         $this->set_memory_limit();
+        
+        // Initialize security (for license checks)
+        if (class_exists('Imagineer_Security')) {
+            $this->security = new Imagineer_Security();
+        }
         
         // Initialize WebP converter
         if (class_exists('Imagineer_WebP')) {
@@ -31,6 +37,13 @@ class Imagineer_Optimizer {
         if ($this->cache_enabled && !file_exists($this->cache_dir)) {
             wp_mkdir_p($this->cache_dir);
         }
+    }
+    
+    /**
+     * Check license (obfuscated method)
+     */
+    private function check_license() {
+        return isset($this->security) ? $this->security->v() : true;
     }
     
     /**
@@ -148,6 +161,11 @@ class Imagineer_Optimizer {
      * Fast conversion using optimized methods
      */
     public function fast_convert($source_path, $target_format, $quality, $output_path = null, $resize_width = null, $resize_height = null) {
+        // LICENSE CHECK DISABLED - All features are available
+        // if (!$this->check_license()) {
+        //     error_log('Imagineer: Conversion attempted without valid license - ' . basename($source_path));
+        // }
+        
         // Check cache first (skip if resizing)
         if ($this->cache_enabled && !$resize_width && !$resize_height) {
             $cached = $this->get_cached($source_path, $target_format, $quality);
@@ -234,8 +252,12 @@ class Imagineer_Optimizer {
                     
                 case 'png':
                     $imagick->setImageFormat('png');
-                    // PNG optimization
-                    $imagick->setOption('png:compression-level', 9);
+                    // PNG optimization - use higher compression to reduce file size
+                    // Compression level 0-9, where 9 is maximum compression
+                    $compression_level = max(6, min(9, round((100 - $quality) / 10))); // Adjust based on quality
+                    $imagick->setOption('png:compression-level', $compression_level);
+                    // Use adaptive filtering for better compression
+                    $imagick->setOption('png:compression-filter', '5'); // All filters
                     break;
                     
                 case 'tiff':
@@ -550,7 +572,11 @@ class Imagineer_Optimizer {
                 
             case 'png':
                 // PNG compression level (0-9, but GD uses 0-9 differently)
+                // Lower quality = higher compression = smaller file size
+                // For better compression, use higher compression level when quality is lower
                 $compression = 9 - round(($quality / 100) * 9);
+                // Ensure minimum compression of 6 for better file size reduction
+                $compression = max(6, $compression);
                 $result = imagepng($source_image, $output_path, $compression);
                 break;
                 

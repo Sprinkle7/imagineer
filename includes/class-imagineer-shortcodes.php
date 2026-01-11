@@ -69,11 +69,6 @@ class Imagineer_Shortcodes {
         ob_start();
         ?>
         <div class="imagineer-converter-widget" id="<?php echo esc_attr($converter_id); ?>">
-            <div class="ic-widget-header">
-                <h3><?php echo esc_html($atts['title']); ?></h3>
-                <p>Convert <?php echo strtoupper($atts['from']); ?> → <?php echo strtoupper($atts['to']); ?></p>
-            </div>
-            
             <div class="ic-widget-body">
                 <div class="ic-upload-zone">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -82,7 +77,7 @@ class Imagineer_Shortcodes {
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
                     <p>Drop image or click to browse</p>
-                    <input type="file" class="ic-file-input" accept="image/*">
+                    <input type="file" class="ic-file-input" accept="image/*" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
                 </div>
                 
                 <button type="button" class="ic-convert-button" 
@@ -173,11 +168,6 @@ class Imagineer_Shortcodes {
         ob_start();
         ?>
         <div class="imagineer-bulk-widget">
-            <div class="ic-widget-header">
-                <h3><?php echo esc_html($atts['title']); ?></h3>
-                <p>Convert multiple images at once</p>
-            </div>
-            
             <div class="ic-widget-body">
                 <div class="ic-upload-zone ic-bulk-upload">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -186,7 +176,7 @@ class Imagineer_Shortcodes {
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
                     <p>Drop multiple images or click to browse</p>
-                    <input type="file" class="ic-bulk-file-input" accept="image/*" multiple>
+                    <input type="file" class="ic-bulk-file-input" accept="image/*" multiple style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
                 </div>
                 
                 <div class="ic-bulk-controls">
@@ -194,6 +184,8 @@ class Imagineer_Shortcodes {
                         <option value="jpg">Convert to JPG</option>
                         <option value="png">Convert to PNG</option>
                         <option value="webp">Convert to WEBP</option>
+                        <option value="gif">Convert to GIF</option>
+                        <option value="bmp">Convert to BMP</option>
                         <option value="tiff">Convert to TIFF</option>
                     </select>
                     
@@ -241,13 +233,6 @@ class Imagineer_Shortcodes {
         ob_start();
         ?>
         <div class="imagineer-resize-widget">
-            <div class="ic-widget-header">
-                <h3><?php echo esc_html($atts['title']); ?></h3>
-                <?php if ($atts['width'] || $atts['height']): ?>
-                <p>Resize to <?php echo $atts['width'] ?: 'auto'; ?> × <?php echo $atts['height'] ?: 'auto'; ?>px</p>
-                <?php endif; ?>
-            </div>
-            
             <div class="ic-widget-body">
                 <div class="ic-upload-zone">
                     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -256,7 +241,7 @@ class Imagineer_Shortcodes {
                         <polyline points="21 15 16 10 5 21"></polyline>
                     </svg>
                     <p>Upload image to resize</p>
-                    <input type="file" class="ic-file-input" accept="image/*">
+                    <input type="file" class="ic-file-input" accept="image/*" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
                 </div>
                 
                 <button type="button" class="ic-convert-button"

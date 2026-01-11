@@ -3,6 +3,10 @@
  * Welcome Screen & Setup Wizard
  */
 
+if (!defined('ABSPATH')) {
+    exit; // Exit if accessed directly
+}
+
 class Imagineer_Welcome {
     
     public function __construct() {
