@@ -72,28 +72,64 @@ class Imagineer_WebP {
     /**
      * Convert WebP to other format (using multiple methods)
      */
-    public function convert_from_webp($source_path, $target_format, $quality = 80) {
-        $output_path = preg_replace('/\.webp$/i', '.' . $target_format, $source_path);
+    public function convert_from_webp($source_path, $target_format, $quality = 80, $output_path = null) {
+        // Use provided output path, or generate one from source path
+        if (!$output_path) {
+            $output_path = preg_replace('/\.webp$/i', '.' . $target_format, $source_path);
+        }
+        
+        // Ensure output directory exists
+        $output_dir = dirname($output_path);
+        if (!file_exists($output_dir)) {
+            wp_mkdir_p($output_dir);
+        }
         
         // Method 1: Try GD if available
         if (function_exists('imagecreatefromwebp')) {
-            $source_image = imagecreatefromwebp($source_path);
+            $source_image = @imagecreatefromwebp($source_path);
             if ($source_image) {
                 $success = false;
                 switch ($target_format) {
                     case 'jpg':
                     case 'jpeg':
-                        $success = imagejpeg($source_image, $output_path, $quality);
+                        // Remove transparency for JPEG
+                        $width = imagesx($source_image);
+                        $height = imagesy($source_image);
+                        $jpeg_image = imagecreatetruecolor($width, $height);
+                        $white = imagecolorallocate($jpeg_image, 255, 255, 255);
+                        imagefill($jpeg_image, 0, 0, $white);
+                        imagecopy($jpeg_image, $source_image, 0, 0, 0, 0, $width, $height);
+                        imagedestroy($source_image);
+                        $success = imagejpeg($jpeg_image, $output_path, $quality);
+                        imagedestroy($jpeg_image);
                         break;
                     case 'png':
                         $compression = 9 - round(($quality / 100) * 9);
+                        // Preserve transparency for PNG
+                        imagealphablending($source_image, false);
+                        imagesavealpha($source_image, true);
                         $success = imagepng($source_image, $output_path, $compression);
+                        imagedestroy($source_image);
                         break;
+                    case 'gif':
+                        $success = imagegif($source_image, $output_path);
+                        imagedestroy($source_image);
+                        break;
+                    case 'bmp':
+                        if (function_exists('imagebmp')) {
+                            $success = imagebmp($source_image, $output_path);
+                            imagedestroy($source_image);
+                        } else {
+                            imagedestroy($source_image);
+                            $success = false;
+                        }
+                        break;
+                    default:
+                        imagedestroy($source_image);
+                        $success = false;
                 }
                 
-                imagedestroy($source_image);
-                
-                if ($success) {
+                if ($success && file_exists($output_path)) {
                     return array(
                         'success' => true,
                         'path' => $output_path,
@@ -107,18 +143,54 @@ class Imagineer_WebP {
         if (extension_loaded('imagick') && class_exists('Imagick')) {
             try {
                 $imagick = new Imagick($source_path);
-                $imagick->setImageFormat($target_format);
+                
+                // Handle format-specific settings
+                switch ($target_format) {
+                    case 'jpg':
+                    case 'jpeg':
+                        $imagick->setImageFormat('jpeg');
+                        // Remove transparency for JPEG
+                        if ($imagick->getImageAlphaChannel()) {
+                            $white = new ImagickPixel('white');
+                            $imagick->setImageBackgroundColor($white);
+                            $imagick->setImageAlphaChannel(Imagick::ALPHACHANNEL_REMOVE);
+                        }
+                        break;
+                    case 'png':
+                        $imagick->setImageFormat('png');
+                        // PNG compression level (0-9)
+                        $compression = 9 - round(($quality / 100) * 9);
+                        $imagick->setImageCompressionQuality($compression * 10);
+                        break;
+                    case 'gif':
+                        $imagick->setImageFormat('gif');
+                        break;
+                    case 'bmp':
+                        $imagick->setImageFormat('bmp');
+                        break;
+                    case 'tiff':
+                    case 'tif':
+                        $imagick->setImageFormat('tiff');
+                        $imagick->setImageCompression(Imagick::COMPRESSION_LZW);
+                        break;
+                    default:
+                        $imagick->setImageFormat($target_format);
+                }
+                
                 $imagick->setImageCompressionQuality($quality);
                 $imagick->writeImage($output_path);
                 $imagick->clear();
                 $imagick->destroy();
                 
-                return array(
-                    'success' => true,
-                    'path' => $output_path,
-                    'size' => filesize($output_path)
-                );
+                if (file_exists($output_path)) {
+                    return array(
+                        'success' => true,
+                        'path' => $output_path,
+                        'size' => filesize($output_path)
+                    );
+                }
             } catch (Exception $e) {
+                error_log('Imagineer: Imagick WebP conversion failed: ' . $e->getMessage());
                 // Continue to next method
             }
         }
@@ -150,17 +222,43 @@ class Imagineer_WebP {
                                 switch ($target_format) {
                                     case 'jpg':
                                     case 'jpeg':
-                                        $success = imagejpeg($source_image, $output_path, $quality);
+                                        // Remove transparency for JPEG
+                                        $width = imagesx($source_image);
+                                        $height = imagesy($source_image);
+                                        $jpeg_image = imagecreatetruecolor($width, $height);
+                                        $white = imagecolorallocate($jpeg_image, 255, 255, 255);
+                                        imagefill($jpeg_image, 0, 0, $white);
+                                        imagecopy($jpeg_image, $source_image, 0, 0, 0, 0, $width, $height);
+                                        imagedestroy($source_image);
+                                        $success = imagejpeg($jpeg_image, $output_path, $quality);
+                                        imagedestroy($jpeg_image);
                                         break;
                                     case 'png':
                                         $compression = 9 - round(($quality / 100) * 9);
+                                        imagealphablending($source_image, false);
+                                        imagesavealpha($source_image, true);
                                         $success = imagepng($source_image, $output_path, $compression);
+                                        imagedestroy($source_image);
                                         break;
+                                    case 'gif':
+                                        $success = imagegif($source_image, $output_path);
+                                        imagedestroy($source_image);
+                                        break;
+                                    case 'bmp':
+                                        if (function_exists('imagebmp')) {
+                                            $success = imagebmp($source_image, $output_path);
+                                            imagedestroy($source_image);
+                                        } else {
+                                            imagedestroy($source_image);
+                                            $success = false;
+                                        }
+                                        break;
+                                    default:
+                                        imagedestroy($source_image);
+                                        $success = false;
                                 }
                                 
-                                imagedestroy($source_image);
-                                
-                                if ($success) {
+                                if ($success && file_exists($output_path)) {
                                     return array(
                                         'success' => true,
                                         'path' => $output_path,

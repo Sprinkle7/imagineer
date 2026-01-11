@@ -29,17 +29,6 @@
             const $result = $widget.find('.ic-widget-result');
             let selectedFile = null;
             
-            // Click on upload zone to trigger file input
-            $uploadZone.on('click', function(e) {
-                // Don't trigger if clicking directly on file input
-                if ($(e.target).is('input[type="file"]')) {
-                    return;
-                }
-                e.preventDefault();
-                e.stopPropagation();
-                $fileInput[0].click();
-            });
-            
             // File input change handler
             $fileInput.on('change', function(e) {
                 e.stopPropagation();
@@ -59,29 +48,64 @@
             $uploadZone.on('dragover', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                $(this).css('border-color', '#667eea');
+                $(this).addClass('dragover');
             });
             
             $uploadZone.on('dragleave', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                $(this).css('border-color', '#ddd');
+                $(this).removeClass('dragover');
             });
             
             $uploadZone.on('drop', function(e) {
                 e.preventDefault();
                 e.stopPropagation();
-                $(this).css('border-color', '#ddd');
+                $(this).removeClass('dragover');
                 
                 const files = e.originalEvent.dataTransfer.files;
                 if (files.length > 0) {
-                    selectedFile = files[0];
-                    $uploadZone.addClass('has-file');
-                    $uploadZone.find('p').text('✓ ' + selectedFile.name);
+                    // Set files to input
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(files[0]);
+                    $fileInput[0].files = dataTransfer.files;
+                    
+                    // Trigger change event
+                    $fileInput.trigger('change');
+                }
+            });
+            
+            // Prevent file input click from bubbling to upload zone
+            $fileInput.on('click', function(e) {
+                e.stopPropagation();
+            });
+            
+            // Drag and drop handlers
+            $uploadZone.on('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).addClass('dragover');
+            });
+            
+            $uploadZone.on('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).removeClass('dragover');
+            });
+            
+            $uploadZone.on('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).removeClass('dragover');
+                
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
                     // Set the file input
                     const dataTransfer = new DataTransfer();
-                    dataTransfer.items.add(selectedFile);
+                    dataTransfer.items.add(files[0]);
                     $fileInput[0].files = dataTransfer.files;
+                    
+                    // Trigger change event
+                    $fileInput.trigger('change');
                 }
             });
             
@@ -195,16 +219,6 @@
             const $results = $widget.find('.ic-bulk-results');
             let selectedFiles = [];
             
-            // Click on upload zone
-            $uploadZone.on('click', function(e) {
-                if ($(e.target).is('input[type="file"]')) {
-                    return;
-                }
-                e.preventDefault();
-                e.stopPropagation();
-                $fileInput[0].click();
-            });
-            
             // File input change
             $fileInput.on('change', function(e) {
                 e.stopPropagation();
@@ -218,6 +232,38 @@
             // Prevent file input click from bubbling
             $fileInput.on('click', function(e) {
                 e.stopPropagation();
+            });
+            
+            // Drag and drop handlers for bulk upload
+            $uploadZone.on('dragover', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).addClass('dragover');
+            });
+            
+            $uploadZone.on('dragleave', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).removeClass('dragover');
+            });
+            
+            $uploadZone.on('drop', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                $(this).removeClass('dragover');
+                
+                const files = e.originalEvent.dataTransfer.files;
+                if (files.length > 0) {
+                    // Set files to input (support multiple files)
+                    const dataTransfer = new DataTransfer();
+                    for (let i = 0; i < files.length; i++) {
+                        dataTransfer.items.add(files[i]);
+                    }
+                    $fileInput[0].files = dataTransfer.files;
+                    
+                    // Trigger change event
+                    $fileInput.trigger('change');
+                }
             });
             
             // Convert button

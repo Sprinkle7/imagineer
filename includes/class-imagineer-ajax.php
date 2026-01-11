@@ -422,6 +422,14 @@ class Imagineer_Ajax {
             $resize_width = $maintain_resolution ? null : (isset($_POST['resize_width']) ? intval($_POST['resize_width']) : null);
             $resize_height = $maintain_resolution ? null : (isset($_POST['resize_height']) ? intval($_POST['resize_height']) : null);
             
+            // Ensure output directory exists
+            $output_dir = dirname($new_file_path);
+            if (!file_exists($output_dir)) {
+                wp_mkdir_p($output_dir);
+            }
+            
+            error_log('Imagineer: Starting conversion - Source: ' . $file_path . ', Target: ' . $new_file_path . ', Format: ' . $target_format);
+            
             $result = $this->optimizer->fast_convert($file_path, $target_format, $quality, $new_file_path, $resize_width, $resize_height);
             
             if (isset($result['error'])) {
@@ -429,9 +437,25 @@ class Imagineer_Ajax {
                 wp_send_json_error(array('message' => $result['error']));
             }
             
-            if (!file_exists($new_file_path)) {
-                error_log('Imagineer: Converted file not created at: ' . $new_file_path);
-                wp_send_json_error(array('message' => __('Conversion failed - file not created.', 'imagineer')));
+            // Check if result has a different path than expected
+            $actual_path = isset($result['path']) ? $result['path'] : $new_file_path;
+            
+            if (!file_exists($actual_path)) {
+                error_log('Imagineer: Converted file not created. Expected: ' . $new_file_path . ', Actual: ' . $actual_path);
+                error_log('Imagineer: Result data: ' . print_r($result, true));
+                wp_send_json_error(array('message' => __('Conversion failed - file not created. Please check server logs for details.', 'imagineer')));
+            }
+            
+            // If result path is different, use it
+            if ($actual_path !== $new_file_path && file_exists($actual_path)) {
+                error_log('Imagineer: Result path differs from expected. Moving file from ' . $actual_path . ' to ' . $new_file_path);
+                if (@rename($actual_path, $new_file_path)) {
+                    error_log('Imagineer: File moved successfully');
+                } else {
+                    error_log('Imagineer: Failed to move file, using actual path');
+                    $new_file_path = $actual_path;
+                    $new_filename = basename($new_file_path);
+                }
             }
             
             error_log('Imagineer: File converted successfully to: ' . $new_file_path);

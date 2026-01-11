@@ -78,7 +78,7 @@ class Imagineer_Shortcodes {
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
                     <p>Drop image or click to browse</p>
-                    <input type="file" class="ic-file-input" accept="image/*" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                    <input type="file" class="ic-file-input" accept="image/*" style="position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer; z-index: 10;">
                 </div>
                 
                 <button type="button" class="ic-convert-button" 
@@ -177,7 +177,7 @@ class Imagineer_Shortcodes {
                         <line x1="12" y1="3" x2="12" y2="15"></line>
                     </svg>
                     <p>Drop multiple images or click to browse</p>
-                    <input type="file" class="ic-bulk-file-input" accept="image/*" multiple style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                    <input type="file" class="ic-bulk-file-input" accept="image/*" multiple style="position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer; z-index: 10;">
                 </div>
                 
                 <div class="ic-bulk-controls">
@@ -242,7 +242,7 @@ class Imagineer_Shortcodes {
                         <polyline points="21 15 16 10 5 21"></polyline>
                     </svg>
                     <p>Upload image to resize</p>
-                    <input type="file" class="ic-file-input" accept="image/*" style="position: absolute; opacity: 0; width: 0; height: 0; pointer-events: none;">
+                    <input type="file" class="ic-file-input" accept="image/*" style="position: absolute; opacity: 0; width: 100%; height: 100%; top: 0; left: 0; cursor: pointer; z-index: 10;">
                 </div>
                 
                 <button type="button" class="ic-convert-button"

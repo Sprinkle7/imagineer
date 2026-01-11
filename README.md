@@ -30,7 +30,6 @@ Convert and optimize images between PNG, JPG, WEBP, TIFF, BMP, and GIF formats. 
 * **Conversion History** - View detailed conversion logs with file sizes
 * **Backup & Restore** - Automatic backups before replacing originals
 * **Auto-Optimize on Upload** - Automatically convert images when uploaded
-* **Frontend Shortcodes** - Add conversion tools to any page for visitors
 * **Professional Dialogs** - Modern dialog boxes instead of browser alerts
 * **Auto-Download** - Converted images download automatically
 * **Beautiful UI** - Professional, modern design with gradient cards
@@ -58,17 +57,6 @@ Convert and optimize images between PNG, JPG, WEBP, TIFF, BMP, and GIF formats. 
 * **Recent Conversions** - Quick access to conversion history
 * **WooCommerce Ready** - Perfect for product images
 * **Developer Friendly** - Clean code, hooks, and filters
-
-= 📝 Frontend Shortcodes =
-
-Add conversion tools to any page for your visitors:
-
-* `[imagineer_png_to_jpg]` - PNG to JPG converter
-* `[imagineer_jpg_to_png]` - JPG to PNG converter
-* `[imagineer_to_webp]` - Convert any image to WEBP
-* `[imagineer_bulk_converter]` - Bulk converter with multiple files
-* `[imagineer_resize width="800"]` - Resize & convert tool
-* `[imagineer_converter from="png" to="jpg"]` - Custom converter
 
 Perfect for creating utility pages for your visitors!
 
@@ -158,9 +146,6 @@ TIFF format requires the Imagick PHP extension. If you see errors when convertin
 3. For VPS/dedicated servers, install via: `sudo apt-get install php-imagick`
 4. PNG, JPG, WEBP, GIF, and BMP formats work without Imagick
 
-= Can I use this on the frontend? =
-
-Yes! Use shortcodes to add conversion tools to any page. Perfect for creating utility pages for your visitors.
 
 = How many files can I convert at once? =
 
@@ -189,7 +174,6 @@ Visit the WordPress.org support forum for this plugin. For priority support, con
 3. Bulk conversion with multiple files
 4. Media Library integration for easy conversion
 5. Statistics dashboard showing conversions and space saved
-6. Settings page with shortcodes documentation
 
 == Changelog ==
 
@@ -204,7 +188,6 @@ Visit the WordPress.org support forum for this plugin. For priority support, con
 * Statistics dashboard with conversion history
 * Space saved tracking
 * Auto-download functionality
-* Frontend shortcodes for public conversion tools
 * Professional dialog system (replaces browser alerts)
 * Backup and restore functionality
 * Auto-optimize on upload

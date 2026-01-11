@@ -502,9 +502,9 @@ class Imagineer_Admin {
                 <a href="?page=imagineer-settings&tab=settings" class="nav-tab <?php echo $active_tab === 'settings' ? 'nav-tab-active' : ''; ?>">
                     ⚙️ <?php _e('Settings', 'imagineer'); ?>
                 </a>
-                <a href="?page=imagineer-settings&tab=shortcodes" class="nav-tab <?php echo $active_tab === 'shortcodes' ? 'nav-tab-active' : ''; ?>">
+                <!-- <a href="?page=imagineer-settings&tab=shortcodes" class="nav-tab <?php echo $active_tab === 'shortcodes' ? 'nav-tab-active' : ''; ?>">
                     📝 <?php _e('Shortcodes', 'imagineer'); ?>
-                </a>
+                </a> -->
             </nav>
             
             <?php if ($active_tab === 'settings'): ?>
@@ -1354,6 +1354,39 @@ class Imagineer_Admin {
                 var ajaxurl = (typeof icData !== 'undefined' ? icData.ajaxUrl : '<?php echo admin_url('admin-ajax.php'); ?>');
             }
             
+            // Download function for media library (uses server-side handler)
+            function triggerDownload(url, filename) {
+                const downloadNonce = (typeof icData !== 'undefined' && icData.downloadNonce) ? icData.downloadNonce : '<?php echo wp_create_nonce('ic_download_file'); ?>';
+                const ajaxUrl = (typeof icData !== 'undefined' && icData.ajaxUrl) ? icData.ajaxUrl : ajaxurl;
+                const downloadUrl = ajaxUrl + '?action=ic_download_file&file=' + encodeURIComponent(url) + 
+                                   '&filename=' + encodeURIComponent(filename) + 
+                                   '&nonce=' + encodeURIComponent(downloadNonce);
+                
+                // Create hidden iframe for download (works better than link.click())
+                const iframe = document.createElement('iframe');
+                iframe.style.display = 'none';
+                iframe.src = downloadUrl;
+                document.body.appendChild(iframe);
+                
+                // Clean up after download starts
+                setTimeout(() => {
+                    document.body.removeChild(iframe);
+                }, 2000);
+                
+                // Fallback: Try direct link method if iframe doesn't work
+                setTimeout(() => {
+                    const link = document.createElement('a');
+                    link.href = downloadUrl;
+                    link.target = '_blank';
+                    link.style.display = 'none';
+                    document.body.appendChild(link);
+                    link.click();
+                    setTimeout(() => {
+                        document.body.removeChild(link);
+                    }, 100);
+                }, 100);
+            }
+            
             // Wait for admin script to load (which contains ImagineerDialog)
             function waitForDialog(callback, maxAttempts = 50) {
                 if (typeof ImagineerDialog !== 'undefined') {
@@ -1544,11 +1577,24 @@ class Imagineer_Admin {
                                     $item.css('opacity', '1').css('border-color', '#46b450');
                                     
                                     if (!replaceOriginal) {
-                                        // Trigger download
-                                        const link = document.createElement('a');
-                                        link.href = response.data.url;
-                                        link.download = response.data.filename;
-                                        link.click();
+                                        // Trigger download using server-side handler
+                                        if (typeof triggerDownload === 'function') {
+                                            triggerDownload(response.data.url, response.data.filename);
+                                        } else {
+                                            // Fallback if triggerDownload not available
+                                            const downloadNonce = (typeof icData !== 'undefined' && icData.downloadNonce) ? icData.downloadNonce : '<?php echo wp_create_nonce('ic_download_file'); ?>';
+                                            const ajaxUrl = (typeof icData !== 'undefined' && icData.ajaxUrl) ? icData.ajaxUrl : ajaxurl;
+                                            const downloadUrl = ajaxUrl + '?action=ic_download_file&file=' + encodeURIComponent(response.data.url) + 
+                                                               '&filename=' + encodeURIComponent(response.data.filename) + 
+                                                               '&nonce=' + encodeURIComponent(downloadNonce);
+                                            const iframe = document.createElement('iframe');
+                                            iframe.style.display = 'none';
+                                            iframe.src = downloadUrl;
+                                            document.body.appendChild(iframe);
+                                            setTimeout(() => {
+                                                document.body.removeChild(iframe);
+                                            }, 2000);
+                                        }
                                     }
                                 }
                                 convertNext(index + 1);
@@ -1642,13 +1688,24 @@ class Imagineer_Admin {
                                 } else {
                                     $btn.text('✅ Downloaded');
                                     
-                                    // Trigger download
-                                    const link = document.createElement('a');
-                                    link.href = response.data.url;
-                                    link.download = response.data.filename || 'converted.' + format;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
+                                    // Trigger download using server-side handler
+                                    if (typeof triggerDownload === 'function') {
+                                        triggerDownload(response.data.url, response.data.filename || 'converted.' + format);
+                                    } else {
+                                        // Fallback if triggerDownload not available
+                                        const downloadNonce = (typeof icData !== 'undefined' && icData.downloadNonce) ? icData.downloadNonce : '<?php echo wp_create_nonce('ic_download_file'); ?>';
+                                        const ajaxUrl = (typeof icData !== 'undefined' && icData.ajaxUrl) ? icData.ajaxUrl : ajaxurl;
+                                        const downloadUrl = ajaxUrl + '?action=ic_download_file&file=' + encodeURIComponent(response.data.url) + 
+                                                           '&filename=' + encodeURIComponent(response.data.filename || 'converted.' + format) + 
+                                                           '&nonce=' + encodeURIComponent(downloadNonce);
+                                        const iframe = document.createElement('iframe');
+                                        iframe.style.display = 'none';
+                                        iframe.src = downloadUrl;
+                                        document.body.appendChild(iframe);
+                                        setTimeout(() => {
+                                            document.body.removeChild(iframe);
+                                        }, 2000);
+                                    }
                                     
                                     setTimeout(() => {
                                         $btn.text('Convert').prop('disabled', false);

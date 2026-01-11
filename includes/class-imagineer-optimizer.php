@@ -431,16 +431,41 @@ class Imagineer_Optimizer {
             case 'image/webp':
                 // Use WebP converter class for better WebP handling
                 if ($this->webp_converter && $this->webp_converter->is_available()) {
-                    $webp_result = $this->webp_converter->convert_from_webp($source_path, $target_format, $quality);
+                    // Generate output path if not provided
+                    if (!$output_path) {
+                        $upload_dir = wp_upload_dir();
+                        $output_dir = $upload_dir['basedir'] . '/imagineer';
+                        wp_mkdir_p($output_dir);
+                        $base_name = pathinfo($source_path, PATHINFO_FILENAME);
+                        $output_path = $output_dir . '/' . $base_name . '.' . $target_format;
+                    }
+                    
+                    // Ensure output directory exists
+                    $output_dir = dirname($output_path);
+                    if (!file_exists($output_dir)) {
+                        wp_mkdir_p($output_dir);
+                    }
+                    
+                    error_log('Imagineer: Converting WebP to ' . $target_format . ' using WebP converter class. Output: ' . $output_path);
+                    $webp_result = $this->webp_converter->convert_from_webp($source_path, $target_format, $quality, $output_path);
+                    
                     if ($webp_result['success']) {
-                        return array(
-                            'path' => $webp_result['path'],
-                            'url' => str_replace(wp_upload_dir()['basedir'], wp_upload_dir()['baseurl'], $webp_result['path']),
-                            'size' => $webp_result['size'],
-                            'format' => $target_format
-                        );
+                        // Verify file exists
+                        if (!file_exists($webp_result['path'])) {
+                            error_log('Imagineer: WebP converter reported success but file not found: ' . $webp_result['path']);
+                            // Fall through to GD method
+                        } else {
+                            error_log('Imagineer: WebP conversion successful: ' . $webp_result['path']);
+                            return array(
+                                'path' => $webp_result['path'],
+                                'url' => str_replace(wp_upload_dir()['basedir'], wp_upload_dir()['baseurl'], $webp_result['path']),
+                                'size' => $webp_result['size'],
+                                'format' => $target_format
+                            );
+                        }
                     } else {
-                        return array('error' => $webp_result['error']);
+                        error_log('Imagineer: WebP converter failed: ' . (isset($webp_result['error']) ? $webp_result['error'] : 'Unknown error'));
+                        // Fall through to GD method as fallback
                     }
                 }
                 
@@ -468,7 +493,12 @@ class Imagineer_Optimizer {
                         }
                     }
                 } elseif (function_exists('imagecreatefromwebp')) {
-                    $source_image = imagecreatefromwebp($source_path);
+                    $source_image = @imagecreatefromwebp($source_path);
+                    if (!$source_image) {
+                        $last_error = error_get_last();
+                        error_log('Imagineer: imagecreatefromwebp failed - ' . ($last_error ? $last_error['message'] : 'Unknown error') . ' - Path: ' . $source_path);
+                        return array('error' => 'Failed to read WebP file. ' . ($last_error ? $last_error['message'] : 'Unknown error'));
+                    }
                 } else {
                     return array('error' => 'Cannot read WebP files. Your server can CREATE WebP but cannot READ them. This is a server limitation.');
                 }
