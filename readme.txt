@@ -145,7 +145,7 @@ No! The plugin works out-of-the-box on standard WordPress hosting. Check the Per
 
 = What if WebP is not supported? =
 
-The plugin includes WebP Convert library, so you can still create WEBP files even if your server doesn't have native WebP support.
+The plugin works with native PHP functions (GD/Imagick) for WebP conversion. For enhanced WebP support on servers without native WebP, you can optionally install the WebP Convert library by running `composer install` in the plugin directory (requires Composer).
 
 = What if TIFF conversion doesn't work? =
 
@@ -218,7 +218,7 @@ Initial release of Imagineer image converter plugin with all features completely
 
 == Third-Party Services ==
 
-This plugin uses the WebP Convert library (rosell-dk/webp-convert) for enhanced WebP support. The library is open source and GPL-compatible. No external services or API calls are made.
+This plugin can optionally use the WebP Convert library (rosell-dk/webp-convert) for enhanced WebP support. The library is open source and GPL-compatible. The plugin works without it using native PHP functions (GD/Imagick). To install the library, run `composer install` in the plugin directory. No external services or API calls are made.
 
 == Privacy ==
 

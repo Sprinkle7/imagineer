@@ -854,11 +854,110 @@ class Imagineer_Admin {
                     </ul>
                 </div>
             </div>
+            
+            <!-- WebP Convert Library Installation Section -->
+            <?php
+            $installer = new Imagineer_Library_Installer();
+            $library_status = $installer->get_status();
+            ?>
+            <div style="background: white; border-radius: 12px; padding: 30px; margin-top: 30px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);">
+                <h2 style="margin-top: 0; color: #1a202c;">📦 Enhanced WebP Support Library</h2>
+                <p style="color: #666; margin-bottom: 20px;">
+                    For enhanced WebP conversion support (works on servers without native WebP), you can install the WebP Convert library. 
+                    The plugin works without it using native PHP functions, but this library provides better compatibility.
+                </p>
+                
+                <div id="ic-library-status" style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+                    <?php if ($library_status['installed']): ?>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="font-size: 32px;">✅</span>
+                            <div>
+                                <h3 style="margin: 0 0 5px 0; color: #46b450;">Library Installed</h3>
+                                <p style="margin: 0; color: #666;">WebP Convert library is installed and ready to use. Enhanced WebP support is available.</p>
+                            </div>
+                        </div>
+                    <?php else: ?>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span style="font-size: 32px;">⚠️</span>
+                            <div>
+                                <h3 style="margin: 0 0 5px 0; color: #f0b849;">Library Not Installed</h3>
+                                <p style="margin: 0; color: #666;">
+                                    The plugin works without the library using native PHP functions. 
+                                    <?php if (!$library_status['writable']): ?>
+                                        <strong style="color: #d63638;">Note: Plugin directory is not writable. Please check file permissions.</strong>
+                                    <?php else: ?>
+                                        Click the button below to install for enhanced WebP support.
+                                    <?php endif; ?>
+                                </p>
+                            </div>
+                        </div>
+                    <?php endif; ?>
+                </div>
+                
+                <?php if (!$library_status['installed'] && $library_status['writable']): ?>
+                    <button id="ic-install-library-btn" class="button button-primary button-large" style="padding: 12px 30px; font-size: 16px; height: auto;">
+                        <span class="dashicons dashicons-download" style="vertical-align: middle; margin-right: 8px;"></span>
+                        Install WebP Convert Library
+                    </button>
+                    <p id="ic-library-install-message" style="margin-top: 15px; display: none;"></p>
+                <?php elseif (!$library_status['writable']): ?>
+                    <div style="background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 6px; color: #856404;">
+                        <strong>⚠️ Permission Issue:</strong> The plugin directory is not writable. Please set proper file permissions (755 for directories, 644 for files) or contact your hosting provider.
+                    </div>
+                <?php endif; ?>
+            </div>
                    
                 </div>
             </div>
             <?php endif; ?>
             
+            <script type="text/javascript">
+            jQuery(document).ready(function($) {
+                // Library installation handler
+                $('#ic-install-library-btn').on('click', function(e) {
+                    e.preventDefault();
+                    const $btn = $(this);
+                    const $message = $('#ic-library-install-message');
+                    
+                    $btn.prop('disabled', true).html('<span class="spinner is-active" style="float: none; margin: 0 8px 0 0;"></span> Installing...');
+                    $message.hide();
+                    
+                    $.ajax({
+                        url: icData.ajaxUrl,
+                        type: 'POST',
+                        data: {
+                            action: 'ic_install_library',
+                            nonce: icData.nonce
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                $message.html('<strong style="color: #46b450;">✅ ' + response.data.message + '</strong>').show();
+                                $('#ic-library-status').html(
+                                    '<div style="display: flex; align-items: center; gap: 15px;">' +
+                                    '<span style="font-size: 32px;">✅</span>' +
+                                    '<div><h3 style="margin: 0 0 5px 0; color: #46b450;">Library Installed</h3>' +
+                                    '<p style="margin: 0; color: #666;">WebP Convert library is installed and ready to use. Enhanced WebP support is available.</p></div>' +
+                                    '</div>'
+                                );
+                                $btn.hide();
+                                
+                                // Reload page after 2 seconds to refresh status
+                                setTimeout(function() {
+                                    location.reload();
+                                }, 2000);
+                            } else {
+                                $message.html('<strong style="color: #d63638;">❌ ' + response.data.message + '</strong>').show();
+                                $btn.prop('disabled', false).html('<span class="dashicons dashicons-download" style="vertical-align: middle; margin-right: 8px;"></span> Install WebP Convert Library');
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            $message.html('<strong style="color: #d63638;">❌ Installation failed. Please try again or check your internet connection.</strong>').show();
+                            $btn.prop('disabled', false).html('<span class="dashicons dashicons-download" style="vertical-align: middle; margin-right: 8px;"></span> Install WebP Convert Library');
+                        }
+                    });
+                });
+            });
+            </script>
             
         </div>
         <?php

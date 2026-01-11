@@ -530,11 +530,19 @@
                     $zipBtn.html(`
                         <h3>📦 Download All as ZIP</h3>
                         <p>All ${files.length} files in one download (${formatFileSize(response.data.size)})</p>
-                        <a href="${response.data.url}" download="${response.data.filename}" class="button button-primary button-large">
+                        <button type="button" class="button button-primary button-large" id="ic-zip-download-btn" data-url="${response.data.url}" data-filename="${response.data.filename}">
                             Download ZIP File
-                        </a>
+                        </button>
                     `);
                     $results.prepend($zipBtn);
+                    
+                    // Handle ZIP download button click
+                    $('#ic-zip-download-btn').on('click', function(e) {
+                        e.preventDefault();
+                        const url = $(this).data('url');
+                        const filename = $(this).data('filename');
+                        triggerDownload(url, filename);
+                    });
                     
                     // Auto-trigger ZIP download
                     triggerDownload(response.data.url, response.data.filename);
@@ -568,11 +576,23 @@
             </p>`;
         }
         
-        const $download = $('<a>')
+        // Ensure filename has proper extension for download button
+        let downloadFilename = data.filename;
+        if (!downloadFilename || downloadFilename.endsWith('.undefined')) {
+            const targetFormat = $('#ic-target-format').val() || 'jpg';
+            const baseName = selectedFiles.length > 0 ? selectedFiles[0].name.replace(/\.[^/.]+$/, '') : 'converted';
+            downloadFilename = baseName + '.' + targetFormat;
+        }
+        
+        const $download = $('<button>')
             .addClass('ic-download-btn')
-            .attr('href', data.url)
-            .attr('download', data.filename)
-            .text(icData.strings.download);
+            .attr('type', 'button')
+            .text(icData.strings.download || 'Download')
+            .on('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                triggerDownload(data.url, downloadFilename);
+            });
         
         $item.append($img);
         $item.append($('<p style="margin: 10px 0 5px; font-weight: 600;"></p>').text(data.filename));
@@ -584,28 +604,53 @@
         
         $results.append($item);
         
-        // Auto-download the file
-        // Ensure filename has proper extension
-        let downloadFilename = data.filename;
-        if (!downloadFilename || downloadFilename.endsWith('.undefined')) {
-            const targetFormat = $('#ic-target-format').val() || 'jpg';
-            const baseName = selectedFiles.length > 0 ? selectedFiles[0].name.replace(/\.[^/.]+$/, '') : 'converted';
-            downloadFilename = baseName + '.' + targetFormat;
-        }
+        // Auto-download the file (using the downloadFilename already set above)
         triggerDownload(data.url, downloadFilename);
     }
     
     /**
      * Trigger automatic download
+     * Uses fetch + blob for reliable downloads (works even for same-origin URLs)
      */
     function triggerDownload(url, filename) {
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = filename;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        // Use fetch to get the file as blob, then create download link
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Download failed');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create blob URL
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(blobUrl);
+                }, 100);
+            })
+            .catch(error => {
+                console.error('Download error:', error);
+                // Fallback to direct link method
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.target = '_blank';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                }, 100);
+            });
     }
     
     /**
@@ -669,13 +714,12 @@
         });
         
         // Download buttons
-        $(document).on('click', '#ic-download-converted', function() {
+        $(document).on('click', '#ic-download-converted', function(e) {
+            e.preventDefault();
             if (afterImage) {
-                const link = document.createElement('a');
-                link.href = afterImage;
                 const targetFormat = $('#ic-target-format').val() || 'jpg';
-                link.download = 'converted-image.' + targetFormat;
-                link.click();
+                const filename = 'converted-image.' + targetFormat;
+                triggerDownload(afterImage, filename);
                 ImagineerToast.success('Downloaded!', 'Converted image saved');
             }
         });

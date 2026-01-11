@@ -48,6 +48,7 @@ require_once IC_PLUGIN_DIR . 'includes/class-imagineer-backup.php';
 require_once IC_PLUGIN_DIR . 'includes/class-imagineer-license.php';
 require_once IC_PLUGIN_DIR . 'includes/class-imagineer-tracking.php';
 require_once IC_PLUGIN_DIR . 'includes/class-imagineer-security.php';
+require_once IC_PLUGIN_DIR . 'includes/class-imagineer-library-installer.php';
 
 // Initialize the plugin
 function ic_init() {
@@ -58,6 +59,9 @@ function ic_init() {
     $license = new Imagineer_License();
     $tracking = new Imagineer_Tracking();
     $security = new Imagineer_Security(); // Initialize security first
+    
+    // Schedule library installation if needed (non-blocking)
+    add_action('ic_install_library', 'ic_install_library_background');
     
     $instances = array(
         'core' => $core,
@@ -70,6 +74,22 @@ function ic_init() {
     );
     
     return $instances;
+}
+
+/**
+ * Background library installation (non-blocking)
+ */
+function ic_install_library_background() {
+    $installer = new Imagineer_Library_Installer();
+    if (!$installer->is_installed()) {
+        $result = $installer->install();
+        // Log result (won't block activation)
+        if ($result['success']) {
+            error_log('Imagineer: WebP Convert library installed successfully.');
+        } else {
+            error_log('Imagineer: Library installation failed: ' . $result['message']);
+        }
+    }
 }
 
 // Hook into WordPress
@@ -115,6 +135,14 @@ function ic_activate() {
     
     // Set redirect flag for welcome screen
     set_transient('ic_activation_redirect', true, 30);
+    
+    // Attempt to install WebP Convert library automatically (non-blocking)
+    // This runs in background - won't block activation if it fails
+    $installer = new Imagineer_Library_Installer();
+    if (!$installer->is_installed()) {
+        // Schedule installation attempt (non-blocking)
+        wp_schedule_single_event(time() + 5, 'ic_install_library');
+    }
 }
 
 // Deactivation hook

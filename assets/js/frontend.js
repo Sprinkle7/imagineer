@@ -300,19 +300,14 @@
                                 const $resultItem = $(
                                     '<div class="ic-bulk-result-item">' +
                                     '<p>' + data.filename + '</p>' +
-                                    '<a href="' + data.url + '" download="' + data.filename + '">Download</a>' +
+                                    '<button type="button" class="ic-bulk-download-btn" data-url="' + data.url + '" data-filename="' + data.filename + '">Download</button>' +
                                     '</div>'
                                 );
                                 
                                 $results.append($resultItem);
                                 
-                                // Auto-download
-                                const link = document.createElement('a');
-                                link.href = data.url;
-                                link.download = data.filename;
-                                document.body.appendChild(link);
-                                link.click();
-                                document.body.removeChild(link);
+                                // Auto-download using fetch+blob method
+                                triggerDownload(data.url, data.filename);
                             }
                             convertNext(index + 1);
                         },
@@ -327,10 +322,74 @@
         });
     }
     
+    /**
+     * Trigger automatic download using fetch+blob method
+     * This ensures files download instead of opening in browser
+     */
+    function triggerDownload(url, filename) {
+        // Use fetch to get the file as blob, then create download link
+        fetch(url)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Download failed');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Create blob URL
+                const blobUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = blobUrl;
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                
+                // Clean up
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                    window.URL.revokeObjectURL(blobUrl);
+                }, 100);
+            })
+            .catch(error => {
+                console.error('Download error:', error);
+                // Fallback to direct link method
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.target = '_blank';
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    document.body.removeChild(link);
+                }, 100);
+            });
+    }
+    
     // Initialize on document ready
     $(document).ready(function() {
         initConverterWidgets();
         initBulkWidgets();
+        
+        // Handle download button clicks
+        $(document).on('click', '.ic-download-link', function(e) {
+            e.preventDefault();
+            const url = $(this).data('url');
+            const filename = $(this).data('filename');
+            if (url && filename) {
+                triggerDownload(url, filename);
+            }
+        });
+        
+        $(document).on('click', '.ic-bulk-download-btn', function(e) {
+            e.preventDefault();
+            const url = $(this).data('url');
+            const filename = $(this).data('filename');
+            if (url && filename) {
+                triggerDownload(url, filename);
+            }
+        });
     });
     
     // Re-initialize on dynamic content load (for AJAX-loaded content)

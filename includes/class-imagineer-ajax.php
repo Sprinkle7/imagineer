@@ -25,6 +25,8 @@ class Imagineer_Ajax {
         add_action('wp_ajax_ic_bulk_convert', array($this, 'bulk_convert'));
         add_action('wp_ajax_ic_media_library_convert', array($this, 'media_library_convert'));
         add_action('wp_ajax_ic_download_zip', array($this, 'download_zip'));
+        add_action('wp_ajax_ic_install_library', array($this, 'install_library'));
+        add_action('wp_ajax_ic_check_library_status', array($this, 'check_library_status'));
         add_action('wp_ajax_ic_activate_license', array($this, 'activate_license_ajax'));
         add_action('wp_ajax_ic_activate_license_new', array($this, 'activate_license_new_ajax'));
         add_action('wp_ajax_ic_deactivate_license', array($this, 'deactivate_license_ajax'));
@@ -914,5 +916,47 @@ class Imagineer_Ajax {
             'filename' => $zip_filename,
             'size' => filesize($zip_path)
         ));
+    }
+    
+    /**
+     * Install WebP Convert library via AJAX
+     */
+    public function install_library() {
+        check_ajax_referer('ic_convert_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Permission denied.', 'imagineer')));
+        }
+        
+        $installer = new Imagineer_Library_Installer();
+        $result = $installer->install();
+        
+        if ($result['success']) {
+            wp_send_json_success(array(
+                'message' => $result['message'],
+                'already_installed' => isset($result['already_installed']) && $result['already_installed']
+            ));
+        } else {
+            wp_send_json_error(array(
+                'message' => $result['message'],
+                'error_code' => isset($result['error_code']) ? $result['error_code'] : 'unknown'
+            ));
+        }
+    }
+    
+    /**
+     * Check library installation status
+     */
+    public function check_library_status() {
+        check_ajax_referer('ic_convert_nonce', 'nonce');
+        
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('Permission denied.', 'imagineer')));
+        }
+        
+        $installer = new Imagineer_Library_Installer();
+        $status = $installer->get_status();
+        
+        wp_send_json_success($status);
     }
 }

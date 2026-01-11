@@ -1,0 +1,58 @@
+# WordPress.org Plugin Distribution Ignore File
+# Files and directories listed here will be excluded from the distribution ZIP
+
+# Composer dependencies (too large for WordPress.org - 17MB)
+# Users can optionally run 'composer install' after installation for enhanced WebP support
+vendor/
+composer.lock
+
+# Development files
+.git/
+.gitignore
+.gitattributes
+.editorconfig
+.idea/
+.vscode/
+*.log
+*.cache
+
+# Node.js (if used)
+node_modules/
+package-lock.json
+yarn.lock
+.npm/
+
+# Build files
+*.min.js.map
+*.min.css.map
+dist/
+build/
+
+# Documentation (keep readme.txt, exclude others)
+README.md
+CHANGELOG.md
+LICENSE.md
+*.md
+!readme.txt
+
+# IDE files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Testing
+tests/
+phpunit.xml
+.phpunit.result.cache
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
+
+# Other
+.env
+.env.local
