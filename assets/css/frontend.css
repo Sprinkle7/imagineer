@@ -123,18 +123,23 @@
     color: #46b450;
 }
 
-.ic-download-link {
+.ic-download-link,
+.ic-bulk-download-btn {
     display: inline-block;
     padding: 12px 30px;
     background: #46b450;
     color: white;
     text-decoration: none;
+    border: none;
     border-radius: 6px;
     font-weight: 600;
+    cursor: pointer;
     transition: background 0.3s ease;
+    font-size: 14px;
 }
 
-.ic-download-link:hover {
+.ic-download-link:hover,
+.ic-bulk-download-btn:hover {
     background: #399638;
     color: white;
 }
