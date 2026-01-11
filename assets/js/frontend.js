@@ -142,20 +142,15 @@
                                 '<p><strong>' + data.filename + '</strong></p>' +
                                 '<p>Size: ' + formatFileSize(data.size) + '</p>' +
                                 '<p style="color: ' + (spaceSaved > 0 ? 'green' : 'red') + '; font-weight: 600;">' + spaceText + '</p>' +
-                                '<a href="' + data.url + '" download="' + data.filename + '" class="ic-download-link">' +
+                                '<button type="button" class="ic-download-link" data-url="' + data.url + '" data-filename="' + data.filename + '">' +
                                 'Download ' + data.format.toUpperCase() + ' File' +
-                                '</a>'
+                                '</button>'
                             ).addClass('show');
                             
                             $convertBtn.text(imagineerData.strings.success);
                             
-                            // Auto-download
-                            const link = document.createElement('a');
-                            link.href = data.url;
-                            link.download = data.filename;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
+                            // Auto-download using fetch+blob method
+                            triggerDownload(data.url, data.filename);
                             
                             setTimeout(function() {
                                 $convertBtn.prop('disabled', false).text('Convert');
